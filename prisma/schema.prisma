@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  DIRECTOR
+  TEACHER
+  TUTOR
+  STUDENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id             Int           @id @default(autoincrement())
+  firstName      String
+  lastName       String
+  email          String        @unique
+  password       String
+  role           Role          @default(STUDENT)
+  phone          String?
+  address        String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  studentProfile Student?      @relation("UserStudent")
+  guardianships  Student[]     @relation("Guardian")
+  attendancesRecorded Attendance[] @relation("TeacherAttendance")
+  meetingsAsTeacher Meeting[] @relation("TeacherMeeting")
+  tasks          Task[]    @relation("TeacherTask")
+  notifications  Notification[]
+}
+
+
+model Student {
+  id             Int       @id
+  user           User      @relation("UserStudent", fields: [id], references: [id])
+  birthDate      DateTime?
+  gender         Gender?
+  cardCode       String    @unique
+  courseId       Int
+  classId        Int
+  guardianId     Int?      // references a User acting as TUTOR
+  course         Course    @relation(fields: [courseId], references: [id])
+  class          Class     @relation(fields: [classId], references: [id])
+  guardian       User?     @relation("Guardian", fields: [guardianId], references: [id])
+  meetings    Meeting[] @relation("StudentMeeting")
+  attendances    Attendance[]
+  leaveRequests  LeaveRequest[]
+  tasks          TaskGrade[]
+}
+
+model Course {
+  id         Int         @id @default(autoincrement())
+  name       String      @unique
+  students   Student[]
+  tasks      Task[]      @relation("CourseTasks")
+}
+
+model Class {
+  id         Int         @id @default(autoincrement())
+  name       String      @unique
+  students   Student[]
+  tasks      Task[]      @relation("ClassTasks")
+}
+
+model Attendance {
+  id          Int        @id @default(autoincrement())
+  studentId   Int
+  teacherId   Int
+  date        DateTime   @default(now())
+  type        String     // "entry" or "exit"
+  student     Student    @relation(fields: [studentId], references: [id])
+  teacher     User       @relation("TeacherAttendance", fields: [teacherId], references: [id])
+}
+
+model LeaveRequest {
+  id             Int          @id @default(autoincrement())
+  studentId      Int
+  reason         String
+  requestDate    DateTime     @default(now())
+  status         LeaveStatus  @default(PENDING)
+  student        Student      @relation(fields: [studentId], references: [id])
+}
+
+model Task {
+  id             Int        @id @default(autoincrement())
+  teacherId      Int
+  courseId       Int
+  classId        Int
+  title          String
+  description    String
+  sendDate       DateTime   @default(now())
+  dueDate        DateTime
+  teacher        User       @relation("TeacherTask", fields: [teacherId], references: [id])
+  course         Course     @relation("CourseTasks", fields: [courseId], references: [id])
+  class          Class      @relation("ClassTasks", fields: [classId], references: [id])
+  taskGrades     TaskGrade[]
+}
+
+model TaskGrade {
+  id         Int       @id @default(autoincrement())
+  taskId     Int
+  studentId  Int
+  grade      Float
+  deliveredAt DateTime?
+  task       Task      @relation(fields: [taskId], references: [id])
+  student    Student   @relation(fields: [studentId], references: [id])
+}
+
+model Meeting {
+  id             Int        @id @default(autoincrement())
+  teacherId      Int
+  studentId      Int
+  subject        String
+  message        String
+  date           DateTime   @default(now())
+  teacher     User       @relation("TeacherMeeting", fields: [teacherId], references: [id])
+  student     Student    @relation("StudentMeeting", fields: [studentId], references: [id])
+}
+
+model Notification {
+  id             Int        @id @default(autoincrement())
+  userId         Int
+  title          String
+  message        String
+  read           Boolean    @default(false)
+  date           DateTime   @default(now())
+  user           User       @relation(fields: [userId], references: [id])
+}

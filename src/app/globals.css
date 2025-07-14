@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@plugin "flowbite-react/plugin/tailwindcss";
+@source "../../.flowbite-react/class-list.json";
 
 :root {
   --background: #ffffff;
@@ -10,6 +12,52 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-primary-50: #f9f1fb;
+  --color-primary-100: #eed3f4;
+  --color-primary-200: #dda5e9;
+  --color-primary-300: #c873da;
+  --color-primary-400: #a84cc3;
+  --color-primary-500: #9334ad;
+  --color-primary-600: #842d9c;
+  --color-primary-700: #75288a;
+  --color-primary-800: #672578;
+  --color-primary-900: #882e96; /* base */
+
+  --color-secondary-50: #fffcea;
+  --color-secondary-100: #fef4c3;
+  --color-secondary-200: #fdeb97;
+  --color-secondary-300: #fce270;
+  --color-secondary-400: #fbd950;
+  --color-secondary-500: #f4c83c;
+  --color-secondary-600: #dbaf33;
+  --color-secondary-700: #ba942c;
+  --color-secondary-800: #9a7a24;
+  --color-secondary-900: #f7e27d; /* base */
+
+  --color-success-50: #e7f6f0;
+  --color-success-100: #c0e8d7;
+  --color-success-200: #97dabd;
+  --color-success-300: #6ccba1;
+  --color-success-400: #45bd8a;
+  --color-success-500: #2fad74;
+  --color-success-600: #2b9966;
+  --color-success-700: #278658;
+  --color-success-800: #257153;
+  --color-success-900: #257153; /* base */
+
+  --color-error-50: #fdecea;
+  --color-error-100: #f9c7be;
+  --color-error-200: #f5a096;
+  --color-error-300: #f0786c;
+  --color-error-400: #ec5449;
+  --color-error-500: #e83d2f;
+  --color-error-600: #d73728;
+  --color-error-700: #c53321;
+  --color-error-800: #b32d1c;
+  --color-error-900: #d94323; /* base */
+
+  --color-neutral-dark: #333333;
+  --color-neutral-light: #F2F2F2;
 }
 
 @media (prefers-color-scheme: dark) {

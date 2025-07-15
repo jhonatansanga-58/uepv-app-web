@@ -30,7 +30,7 @@ export function NavBarComponent() {
         <NavbarLink href="#" className="flex items-center gap-2">
           <div className="flex flex-col text-right leading-tight">
             <span className="text-lg font-medium text-gray-200">
-              Jhonathan58
+              Jhonatan58
             </span>
             <span className="text-md text-gray-300">Team Leader</span>
           </div>

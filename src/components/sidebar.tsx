@@ -23,7 +23,7 @@ export function SideBarComponent() {
       </div>
 
       {/* Menú */}
-      <SidebarItems>
+      <SidebarItems className="min-h-screen">
         <SidebarItemGroup>
           <SidebarItem
             href="/admin/students"

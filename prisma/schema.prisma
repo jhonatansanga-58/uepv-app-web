@@ -39,7 +39,7 @@ model User {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   studentProfile Student?      @relation("UserStudent")
-  guardianships  Student[]     @relation("Guardian")
+  tutorships  Student[]     @relation("Tutor")
   attendancesRecorded Attendance[] @relation("TeacherAttendance")
   meetingsAsTeacher Meeting[] @relation("TeacherMeeting")
   tasks          Task[]    @relation("TeacherTask")
@@ -53,12 +53,10 @@ model Student {
   birthDate      DateTime?
   gender         Gender?
   cardCode       String    @unique
-  courseId       Int
-  classId        Int
-  guardianId     Int?      // references a User acting as TUTOR
-  course         Course    @relation(fields: [courseId], references: [id])
-  class          Class     @relation(fields: [classId], references: [id])
-  guardian       User?     @relation("Guardian", fields: [guardianId], references: [id])
+  courseParallelId  Int
+  tutorId     Int?
+  courseParallel    CourseParallel  @relation(fields: [courseParallelId], references: [id])
+  tutor       User?     @relation("Tutor", fields: [tutorId], references: [id])
   meetings    Meeting[] @relation("StudentMeeting")
   attendances    Attendance[]
   leaveRequests  LeaveRequest[]
@@ -68,15 +66,23 @@ model Student {
 model Course {
   id         Int         @id @default(autoincrement())
   name       String      @unique
-  students   Student[]
-  tasks      Task[]      @relation("CourseTasks")
+  parallels   CourseParallel[]
 }
 
-model Class {
+model Parallel {
   id         Int         @id @default(autoincrement())
   name       String      @unique
-  students   Student[]
-  tasks      Task[]      @relation("ClassTasks")
+  courses   CourseParallel[]
+}
+
+model CourseParallel {
+  id       Int         @id @default(autoincrement())
+  courseId Int
+  parallelId  Int
+  course   Course      @relation(fields: [courseId], references: [id])
+  parallel    Parallel       @relation(fields: [parallelId], references: [id])
+  students Student[]
+  tasks    Task[]      @relation("CourseParallelTasks")
 }
 
 model Attendance {
@@ -101,15 +107,13 @@ model LeaveRequest {
 model Task {
   id             Int        @id @default(autoincrement())
   teacherId      Int
-  courseId       Int
-  classId        Int
+  courseParallelId  Int
   title          String
   description    String
   sendDate       DateTime   @default(now())
   dueDate        DateTime
   teacher        User       @relation("TeacherTask", fields: [teacherId], references: [id])
-  course         Course     @relation("CourseTasks", fields: [courseId], references: [id])
-  class          Class      @relation("ClassTasks", fields: [classId], references: [id])
+  courseParallel    CourseParallel @relation("CourseParallelTasks", fields: [courseParallelId], references: [id])
   taskGrades     TaskGrade[]
 }
 

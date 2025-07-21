@@ -14,7 +14,7 @@ export function SideBarComponent() {
   return (
     <Sidebar
       aria-label="Default sidebar"
-      className="min-h-screen w-64 border-1 border-primary-900"
+      className="min-h-screen max-h-screen w-64 border-1 border-primary-900 overflow-hidden"
     >
       {/* Encabezado con escudo */}
       <div className="flex flex-col items-center py-6 gap-2">
@@ -23,7 +23,7 @@ export function SideBarComponent() {
       </div>
 
       {/* Menú */}
-      <SidebarItems className="min-h-screen">
+      <SidebarItems className="max-h-screen">
         <SidebarItemGroup>
           <SidebarItem
             href="/admin/students"

@@ -1,11 +1,22 @@
 import { HiEye, HiPencilAlt, HiBan } from "react-icons/hi";
 
 type Props = {
+  id: number;
   name: string;
   course: string;
+  onView: (id: number) => void;
+  onEdit: (id: number) => void;
+  onDisable: (id: number) => void;
 };
 
-export default function StudentCard({ name, course }: Props) {
+export default function StudentCard({
+  id,
+  name,
+  course,
+  onView,
+  onEdit,
+  onDisable,
+}: Props) {
   return (
     <div className="flex border-b border-gray-300 bg-white text-sm rounded-xl">
       <div className="flex items-center gap-4 w-1/2 px-6 py-2">
@@ -20,13 +31,22 @@ export default function StudentCard({ name, course }: Props) {
       </div>
 
       <div className="flex items-center justify-end w-auto px-6 py-4 gap-2">
-        <button className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded">
+        <button
+          onClick={() => onView(id)}
+          className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded"
+        >
           <HiEye className="w-5 h-5" />
         </button>
-        <button className="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded">
+        <button
+          onClick={() => onEdit(id)}
+          className="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded"
+        >
           <HiPencilAlt className="w-5 h-5" />
         </button>
-        <button className="bg-red-500 hover:bg-red-600 text-white p-2 rounded">
+        <button
+          onClick={() => onDisable(id)}
+          className="bg-red-500 hover:bg-red-600 text-white p-2 rounded"
+        >
           <HiBan className="w-5 h-5" />
         </button>
       </div>

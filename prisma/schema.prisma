@@ -38,6 +38,7 @@ model User {
   address        String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  active    Boolean  @default(true)
   studentProfile Student?      @relation("UserStudent")
   tutorships  Student[]     @relation("Tutor")
   attendancesRecorded Attendance[] @relation("TeacherAttendance")

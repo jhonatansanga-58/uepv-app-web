@@ -1,6 +1,7 @@
 "use client";
 import { Course, Parallel, Student } from "@/app/types";
 import StudentCard from "@/components/studentCard";
+import StudentDisableModal from "@/components/studentDisableModal";
 import StudentEditModal from "@/components/studentEditModal";
 import StudentInfoModal from "@/components/studentInfoModal";
 import { TextInput } from "flowbite-react";
@@ -29,8 +30,11 @@ export default function Home() {
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
     null
   );
+  const [selectedStudentState, setSelectedStudentState] = useState<boolean>(false);
+
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDisableModalOpen, setIsDisableModalOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -216,6 +220,7 @@ export default function Home() {
             id={student.id}
             name={`${student.user.firstName} ${student.user.lastName}`}
             course={`${selectedCourse?.name} ${selectedParallel?.name}`}
+            active={student.user.active}
             onEdit={(id: number) => {
               setSelectedStudentId(id);
               setIsEditModalOpen(true);
@@ -224,9 +229,11 @@ export default function Home() {
               setSelectedStudentId(id);
               setIsViewModalOpen(true);
             }}
-            onDisable={(id: number) =>
-              console.log("Deshabilitar estudiante", id)
-            }
+            onDisable={(id: number) => {
+              setSelectedStudentId(id);
+              setSelectedStudentState(student.user.active);
+              setIsDisableModalOpen(true);
+            }}
           />
         ))}
       </div>
@@ -239,6 +246,16 @@ export default function Home() {
         id={selectedStudentId}
         open={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
+        onUpdated={handleStudentUpdated}
+      />
+      <StudentDisableModal
+        id={selectedStudentId}
+        name={
+          students.find((s) => s.id === selectedStudentId)?.user.firstName || ""
+        }
+        active={selectedStudentState}
+        open={isDisableModalOpen}
+        onClose={() => setIsDisableModalOpen(false)}
         onUpdated={handleStudentUpdated}
       />
     </div>

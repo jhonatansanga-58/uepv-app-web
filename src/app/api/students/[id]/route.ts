@@ -48,22 +48,35 @@ export async function PATCH(
   const data = await req.json();
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const userUpdateData: any = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const studentUpdateData: any = {};
+
+    if ("firstName" in data) userUpdateData.firstName = data.firstName;
+    if ("lastName" in data) userUpdateData.lastName = data.lastName;
+    if ("email" in data) userUpdateData.email = data.email;
+    if ("phone" in data) userUpdateData.phone = data.phone || null;
+    if ("address" in data) userUpdateData.address = data.address || null;
+    if ("active" in data) userUpdateData.active = data.active;
+
+    if ("birthDate" in data)
+      studentUpdateData.birthDate = data.birthDate
+        ? new Date(`${data.birthDate}T12:00:00Z`)
+        : null;
+
+    if ("gender" in data) studentUpdateData.gender = data.gender || null;
+    if ("cardCode" in data) studentUpdateData.cardCode = data.cardCode;
+
+    if (Object.keys(userUpdateData).length > 0) {
+      studentUpdateData.user = {
+        update: userUpdateData,
+      };
+    }
+
     const updatedStudent = await prisma.student.update({
       where: { id },
-      data: {
-        birthDate: data.birthDate ? new Date(`${data.birthDate}T12:00:00Z`) : null,
-        gender: data.gender || null,
-        cardCode: data.cardCode,
-        user: {
-          update: {
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            phone: data.phone || null,
-            address: data.address || null,
-          },
-        },
-      },
+      data: studentUpdateData,
       include: {
         user: true,
         courseParallel: {
@@ -78,7 +91,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedStudent);
   } catch (error) {
-    console.error(error);
+    console.error("[PATCH /api/students/[id]]", error);
     return NextResponse.json(
       { error: "Error al actualizar el estudiante" },
       { status: 500 }

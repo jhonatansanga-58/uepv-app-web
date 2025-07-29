@@ -1,6 +1,9 @@
 "use client";
 import { Course, Parallel, Student } from "@/app/types";
 import StudentCard from "@/components/studentCard";
+import StudentDisableModal from "@/components/studentDisableModal";
+import StudentEditModal from "@/components/studentEditModal";
+import StudentInfoModal from "@/components/studentInfoModal";
 import { TextInput } from "flowbite-react";
 import { useEffect, useRef, useState } from "react";
 import { HiChevronDown, HiSearch } from "react-icons/hi";
@@ -23,6 +26,15 @@ export default function Home() {
     null
   );
   const [isParallelsLoading, setIsParallelsLoading] = useState(false);
+
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
+    null
+  );
+  const [selectedStudentState, setSelectedStudentState] = useState<boolean>(false);
+
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDisableModalOpen, setIsDisableModalOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -68,20 +80,24 @@ export default function Home() {
     fetchParallels();
   }, [selectedCourse]);
 
+  const fetchStudents = async (courseId: number, parallelId: number) => {
+    try {
+      const res = await fetch(
+        `/api/students?courseId=${courseId}&parallelId=${parallelId}`
+      );
+      const data = await res.json();
+      setStudents(Array.isArray(data) ? data : []);
+      inputRef.current?.focus();
+    } catch (error) {
+      console.error("Error al cargar estudiantes", error);
+      setStudents([]);
+    }
+  };
+
   useEffect(() => {
     if (!selectedCourse || !selectedParallel) return;
 
-    const fetchStudents = async () => {
-      const res = await fetch(
-        `/api/students?courseId=${selectedCourse.id}&parallelId=${selectedParallel.id}`
-      );
-      const data = await res.json();
-      console.log("Estudiantes:", data);
-      setStudents(Array.isArray(data) ? data : []);
-      inputRef.current?.focus();
-    };
-
-    fetchStudents();
+    fetchStudents(selectedCourse.id, selectedParallel.id);
   }, [selectedCourse, selectedParallel]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,6 +111,13 @@ export default function Home() {
     );
 
     setFilteredStudents(filtered);
+  };
+
+  const handleStudentUpdated = () => {
+    if (selectedCourse && selectedParallel) {
+      fetchStudents(selectedCourse.id, selectedParallel.id);
+    }
+    setIsEditModalOpen(false);
   };
 
   return (
@@ -194,11 +217,47 @@ export default function Home() {
         {filteredStudents.map((student) => (
           <StudentCard
             key={student.id}
+            id={student.id}
             name={`${student.user.firstName} ${student.user.lastName}`}
             course={`${selectedCourse?.name} ${selectedParallel?.name}`}
+            active={student.user.active}
+            onEdit={(id: number) => {
+              setSelectedStudentId(id);
+              setIsEditModalOpen(true);
+            }}
+            onView={(id: number) => {
+              setSelectedStudentId(id);
+              setIsViewModalOpen(true);
+            }}
+            onDisable={(id: number) => {
+              setSelectedStudentId(id);
+              setSelectedStudentState(student.user.active);
+              setIsDisableModalOpen(true);
+            }}
           />
         ))}
       </div>
+      <StudentInfoModal
+        id={selectedStudentId}
+        open={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+      />
+      <StudentEditModal
+        id={selectedStudentId}
+        open={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdated={handleStudentUpdated}
+      />
+      <StudentDisableModal
+        id={selectedStudentId}
+        name={
+          students.find((s) => s.id === selectedStudentId)?.user.firstName || ""
+        }
+        active={selectedStudentState}
+        open={isDisableModalOpen}
+        onClose={() => setIsDisableModalOpen(false)}
+        onUpdated={handleStudentUpdated}
+      />
     </div>
   );
 }

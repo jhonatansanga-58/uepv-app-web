@@ -2,6 +2,7 @@
 
 import {
   Sidebar,
+  SidebarCollapse,
   SidebarItem,
   SidebarItemGroup,
   SidebarItems,
@@ -25,13 +26,15 @@ export function SideBarComponent() {
       {/* Menú */}
       <SidebarItems className="max-h-screen">
         <SidebarItemGroup>
-          <SidebarItem
-            href="/admin/students"
+          <SidebarCollapse
             icon={() => <HiUserGroup className="text-white w-6 h-6" />}
+            label="Estudiantes"
+            open={true}
             className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
           >
-            Estudiantes
-          </SidebarItem>
+            <SidebarItem href="/admin/students">Lista</SidebarItem>
+            <SidebarItem href="/admin/students/create">Registrar nuevo</SidebarItem>
+          </SidebarCollapse>
         </SidebarItemGroup>
       </SidebarItems>
     </Sidebar>

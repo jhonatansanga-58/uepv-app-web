@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     // Opcional: mapear para devolver un array simple
     const data = parallels.map((p) => ({
-      id: p.id,
+      id: p.parallel.id,
       name: p.parallel.name,
     }));
 

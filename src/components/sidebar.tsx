@@ -33,7 +33,21 @@ export function SideBarComponent() {
             className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
           >
             <SidebarItem href="/admin/students">Lista</SidebarItem>
-            <SidebarItem href="/admin/students/create">Registrar nuevo</SidebarItem>
+            <SidebarItem href="/admin/students/create">
+              Registrar nuevo
+            </SidebarItem>
+          </SidebarCollapse>
+
+          <SidebarCollapse
+            icon={() => <HiUserGroup className="text-white w-6 h-6" />}
+            label="Usuarios"
+            open={true}
+            className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
+          >
+            <SidebarItem href="/admin/users">Lista</SidebarItem>
+            <SidebarItem href="/admin/users/create">
+              Registrar nuevo
+            </SidebarItem>
           </SidebarCollapse>
         </SidebarItemGroup>
       </SidebarItems>

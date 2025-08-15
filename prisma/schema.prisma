@@ -45,6 +45,8 @@ model User {
   meetingsAsTeacher Meeting[] @relation("TeacherMeeting")
   tasks          Task[]    @relation("TeacherTask")
   notifications  Notification[]
+
+  TeacherSubject TeacherSubject[]
 }
 
 
@@ -68,6 +70,8 @@ model Course {
   id         Int         @id @default(autoincrement())
   name       String      @unique
   parallels   CourseParallel[]
+
+  CourseSubject CourseSubject[]
 }
 
 model Parallel {
@@ -85,6 +89,34 @@ model CourseParallel {
   students Student[]
   tasks    Task[]      @relation("CourseParallelTasks")
 }
+
+model Subject {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+  teachers TeacherSubject[]
+  courses CourseSubject[]
+}
+
+model TeacherSubject {
+  id        Int     @id @default(autoincrement())
+  teacherId Int
+  subjectId Int
+  teacher   User    @relation(fields: [teacherId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  
+  @@unique([teacherId, subjectId])
+}
+
+model CourseSubject {
+  id        Int     @id @default(autoincrement())
+  courseId  Int
+  subjectId Int
+  course    Course  @relation(fields: [courseId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([courseId, subjectId])
+}
+
 
 model Attendance {
   id          Int        @id @default(autoincrement())

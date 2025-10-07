@@ -32,7 +32,7 @@ export function NavBarComponent() {
             <span className="text-lg font-medium text-gray-200">
               Jhonatan58
             </span>
-            <span className="text-md text-gray-300">Team Leader</span>
+            <span className="text-md text-gray-300">Administrador</span>
           </div>
           <HiUserCircle className="w-11 h-11 text-white" />
         </NavbarLink>

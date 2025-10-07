@@ -192,16 +192,7 @@ export default function CreateUserPage() {
               <option value="STUDENT">Estudiante</option>
             </Select>
           </div>
-          <div className="md:col-span-2">
-            <Label>Activo</Label>
-            <input
-              type="checkbox"
-              name="isActive"
-              checked={form.active}
-              onChange={handleChange}
-              className="ml-2"
-            />
-          </div>
+          
           <div className="md:col-span-2 text-right">
             <Button type="submit" disabled={loading}>
               {loading ? "Registrando..." : "Registrar usuario"}

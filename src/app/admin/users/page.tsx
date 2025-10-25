@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { TextInput } from "flowbite-react";
 import { HiSearch, HiChevronDown } from "react-icons/hi";
 import UserCard from "@/components/userCard";
+import UserInfoModal from "@/components/userInfoModal";
 
 const roleLabels: Record<User["role"], string> = {
   ADMIN: "Administrador",
@@ -27,6 +28,9 @@ export default function UsersPage() {
   const [isRoleOpen, setIsRoleOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const roleRef = useRef<HTMLDivElement>(null);
+
+  const [openViewModal, setOpenViewModal] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | string | null>(null);
 
   useEffect(() => {
     async function fetchUsers() {
@@ -136,7 +140,10 @@ export default function UsersPage() {
             role={user.role}
             active={user.active}
             onEdit={(id: number) => console.log("Edit user:", id)}
-            onView={(id: number) => console.log("View user:", id)}
+            onView={(id: number) => {
+              setSelectedId(id);
+              setOpenViewModal(true);
+            }}
             onDisable={(id: number) => console.log("Toggle active:", id)}
             onAssign={(id: number) =>
               console.log("Assign action for user:", id)
@@ -144,6 +151,11 @@ export default function UsersPage() {
           />
         ))}
       </div>
+      <UserInfoModal
+        id={selectedId}
+        open={openViewModal}
+        onClose={() => setOpenViewModal(false)}
+      />
     </div>
   );
 }

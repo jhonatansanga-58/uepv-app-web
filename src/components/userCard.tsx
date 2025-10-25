@@ -33,7 +33,22 @@ export default function UserCard({
       </div>
 
       <div className="text-lg flex items-center w-1/4 px-6 py-4 text-gray-700">
-        {role}
+        {
+          (() => {
+            switch (role) {
+              case "ADMIN":
+                return "Administrador";
+              case "TEACHER":
+                return "Profesor";
+              case "TUTOR":
+                return "Tutor";
+              case "STUDENT":
+                return "Estudiante";
+              default:
+                return role;
+            }
+          })()
+        }
       </div>
 
       <div className="flex items-center justify-end w-auto px-6 py-4 gap-2">

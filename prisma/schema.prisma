@@ -43,7 +43,6 @@ model User {
   tutorships  Student[]     @relation("Tutor")
   attendancesRecorded Attendance[] @relation("TeacherAttendance")
   meetingsAsTeacher Meeting[] @relation("TeacherMeeting")
-  tasks          Task[]    @relation("TeacherTask")
   notifications  Notification[]
 
   TeacherSubject TeacherSubject[]
@@ -63,7 +62,6 @@ model Student {
   meetings    Meeting[] @relation("StudentMeeting")
   attendances    Attendance[]
   leaveRequests  LeaveRequest[]
-  tasks          TaskGrade[]
 }
 
 model Course {
@@ -88,6 +86,7 @@ model CourseParallel {
   parallel    Parallel       @relation(fields: [parallelId], references: [id])
   students Student[]
   tasks    Task[]      @relation("CourseParallelTasks")
+  notifications Notification[]
 }
 
 model Subject {
@@ -95,6 +94,7 @@ model Subject {
   name  String  @unique
   teachers TeacherSubject[]
   courses CourseSubject[]
+  tasks   Task[]
 }
 
 model TeacherSubject {
@@ -139,32 +139,21 @@ model LeaveRequest {
 
 model Task {
   id             Int        @id @default(autoincrement())
-  teacherId      Int
+  subjectId       Int
   courseParallelId  Int
   title          String
   description    String
   sendDate       DateTime   @default(now())
   dueDate        DateTime
-  teacher        User       @relation("TeacherTask", fields: [teacherId], references: [id])
   courseParallel    CourseParallel @relation("CourseParallelTasks", fields: [courseParallelId], references: [id])
-  taskGrades     TaskGrade[]
-}
-
-model TaskGrade {
-  id         Int       @id @default(autoincrement())
-  taskId     Int
-  studentId  Int
-  grade      Float
-  deliveredAt DateTime?
-  task       Task      @relation(fields: [taskId], references: [id])
-  student    Student   @relation(fields: [studentId], references: [id])
+  subject         Subject          @relation(fields: [subjectId], references: [id])
 }
 
 model Meeting {
   id             Int        @id @default(autoincrement())
   teacherId      Int
   studentId      Int
-  subject        String
+  topic          String
   message        String
   date           DateTime   @default(now())
   teacher     User       @relation("TeacherMeeting", fields: [teacherId], references: [id])
@@ -173,10 +162,11 @@ model Meeting {
 
 model Notification {
   id             Int        @id @default(autoincrement())
-  userId         Int
   title          String
   message        String
-  read           Boolean    @default(false)
   date           DateTime   @default(now())
-  user           User       @relation(fields: [userId], references: [id])
+  userId           Int?
+  courseParallelId Int?
+  user           User?       @relation(fields: [userId], references: [id])
+  courseParallel   CourseParallel? @relation(fields: [courseParallelId], references: [id])
 }

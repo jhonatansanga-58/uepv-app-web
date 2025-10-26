@@ -12,6 +12,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const parallels = await prisma.courseParallel.findMany({
       where: {
         courseId,
+        active: true,
       },
       select: {
         id: true,

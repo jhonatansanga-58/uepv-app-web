@@ -39,6 +39,7 @@ export default function UsersPage() {
   const [openAssignStudentsModal, setOpenAssignStudentsModal] = useState(false);
   const [openAssignSubjectsModal, setOpenAssignSubjectsModal] = useState(false);
   const [selectedId, setSelectedId] = useState<number | string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [assignUserRole, setAssignUserRole] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<{ name: string; active: boolean } | null>(null);
 

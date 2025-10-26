@@ -78,7 +78,6 @@ export default function AssignSubjectsModal({
   const removeFromAssigned = (opt: Option) =>
     setAssigned((curr) => curr.filter((x) => x.id !== opt.id));
 
-  const selectAll = () => setAssigned(available.length ? [...assigned, ...available] : assigned);
   const clearAssigned = () => setAssigned([]);
 
   const handleSave = async () => {
@@ -118,12 +117,6 @@ export default function AssignSubjectsModal({
                     <div className="text-sm text-gray-500 p-3">Sin registros</div>
                   )}
                 </ListGroup>
-              </div>
-
-              <div className="mt-3">
-                <Button size="sm" onClick={selectAll} outline>
-                  Seleccionar todos
-                </Button>
               </div>
             </div>
 

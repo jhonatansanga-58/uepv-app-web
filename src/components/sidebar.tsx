@@ -8,7 +8,7 @@ import {
   SidebarItems,
 } from "flowbite-react";
 
-import { HiUserGroup } from "react-icons/hi";
+import { HiAcademicCap, HiUserGroup } from "react-icons/hi";
 import Image from "next/image";
 
 export function SideBarComponent() {
@@ -49,7 +49,23 @@ export function SideBarComponent() {
               Registrar nuevo
             </SidebarItem>
           </SidebarCollapse>
+
+          <SidebarCollapse
+            icon={() => <HiAcademicCap className="text-white w-6 h-6" />}
+            label="Organización escolar"
+            open={true}
+            className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
+          >
+            <SidebarItem href="/admin/courses">
+              Cursos
+            </SidebarItem>
+            <SidebarItem href="/admin/subjects">
+              Materias
+            </SidebarItem>
+          </SidebarCollapse>
+
         </SidebarItemGroup>
+
       </SidebarItems>
     </Sidebar>
   );

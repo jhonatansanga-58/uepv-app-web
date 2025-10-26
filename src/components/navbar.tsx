@@ -7,10 +7,33 @@ import {
   NavbarLink,
   NavbarToggle,
 } from "flowbite-react";
+import { usePathname } from "next/navigation";
 
 import { HiUserCircle } from "react-icons/hi";
 
 export function NavBarComponent() {
+  const pathname = usePathname();
+
+  // Define the navbar text based on the current route
+  const getNavbarText = () => {
+    switch (pathname) {
+      case "/admin/students":
+        return "Gestión de estudiantes";
+      case "/admin/students/create":
+        return "Registrar nuevo estudiante";
+      case "/admin/users":
+        return "Gestión de usuarios";
+      case "/admin/users/create":
+        return "Registrar nuevo usuario";
+      case "/admin/courses":
+        return "Gestión de cursos";
+      case "/admin/subjects":
+        return "Gestión de materias";
+      default:
+        return "Gestión de estudiantes"; // Default fallback
+    }
+  };
+
   return (
     <Navbar
       fluid
@@ -18,7 +41,7 @@ export function NavBarComponent() {
     >
       <NavbarBrand href="#">
         <span className="self-center whitespace-nowrap text-xl font-semibold text-gray-100">
-          Gestión de estudiantes
+          {getNavbarText()}
         </span>
       </NavbarBrand>
 
@@ -32,7 +55,7 @@ export function NavBarComponent() {
             <span className="text-lg font-medium text-gray-200">
               Jhonatan58
             </span>
-            <span className="text-md text-gray-300">Team Leader</span>
+            <span className="text-md text-gray-300">Administrador</span>
           </div>
           <HiUserCircle className="w-11 h-11 text-white" />
         </NavbarLink>

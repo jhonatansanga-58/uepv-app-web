@@ -88,12 +88,6 @@ export default function AssignStudentsModal({
   const removeFromAssigned = (opt: Option) =>
     setAssigned((curr) => curr.filter((x) => x.id !== opt.id));
 
-  const selectAllVisible = () => {
-    const toAdd = filteredAvailable.filter((o) => !assignedIds.has(o.id));
-    if (toAdd.length === 0) return;
-    setAssigned((curr) => [...curr, ...toAdd]);
-  };
-
   const clearAssigned = () => setAssigned([]);
 
   const handleSave = async () => {
@@ -141,12 +135,6 @@ export default function AssignStudentsModal({
                     <div className="text-sm text-gray-500 p-3">Sin coincidencias</div>
                   )}
                 </ListGroup>
-              </div>
-
-              <div className="mt-3 flex gap-2">
-                <Button size="sm" onClick={selectAllVisible} outline>
-                  Seleccionar todos (visible)
-                </Button>
               </div>
             </div>
 

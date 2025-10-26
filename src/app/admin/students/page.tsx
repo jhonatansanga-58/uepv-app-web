@@ -56,7 +56,8 @@ export default function Home() {
     const fetchCourses = async () => {
       const res = await fetch("/api/courses");
       const data = await res.json();
-      setCourses(data);
+      const activeCourses = data.filter((course: { active: boolean; }) => course.active);
+      setCourses(activeCourses);
     };
     fetchCourses();
   }, []);
@@ -157,11 +158,10 @@ export default function Home() {
               onClick={() => setIsParalelOpen((prev) => !prev)}
               disabled={!selectedCourse || isParallelsLoading}
               className={`w-full px-4 py-2 text-sm border rounded-md flex justify-between items-center transition
-      ${
-        !selectedCourse || isParallelsLoading
-          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-          : "bg-primary-400 text-white hover:bg-primary-300 cursor-pointer"
-      }`}
+      ${!selectedCourse || isParallelsLoading
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-primary-400 text-white hover:bg-primary-300 cursor-pointer"
+                }`}
             >
               {selectedParallel?.name || "Paralelo"}
               <HiChevronDown className="ml-2 h-4 w-4 text-white" />

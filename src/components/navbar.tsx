@@ -16,16 +16,21 @@ export function NavBarComponent() {
 
   // Define the navbar text based on the current route
   const getNavbarText = () => {
-    if (pathname === "/admin/students") {
-      return "Gestión de estudiantes";
-    } else if (pathname === "/admin/students/create") {
-      return "Registrar nuevo estudiante";
-    } else if (pathname === "/admin/users") {
-      return "Gestión de usuarios";
-    } else if (pathname === "/admin/users/create") {
-      return "Registrar nuevo usuario";
-    } else {
-      return "Gestión de estudiantes"; // Default fallback
+    switch (pathname) {
+      case "/admin/students":
+        return "Gestión de estudiantes";
+      case "/admin/students/create":
+        return "Registrar nuevo estudiante";
+      case "/admin/users":
+        return "Gestión de usuarios";
+      case "/admin/users/create":
+        return "Registrar nuevo usuario";
+      case "/admin/courses":
+        return "Gestión de cursos";
+      case "/admin/subjects":
+        return "Gestión de materias";
+      default:
+        return "Gestión de estudiantes"; // Default fallback
     }
   };
 

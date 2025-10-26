@@ -5,6 +5,10 @@ import { TextInput } from "flowbite-react";
 import { HiSearch, HiChevronDown } from "react-icons/hi";
 import UserCard from "@/components/userCard";
 import UserInfoModal from "@/components/userInfoModal";
+import UserEditModal from "@/components/userEditModal";
+import UserDisableModal from "@/components/userDisableModal";
+import AssignStudentsModal from "@/components/assignStudentsModal";
+import AssignSubjectsModal from "@/components/assignSubjectsModal";
 
 const roleLabels: Record<User["role"], string> = {
   ADMIN: "Administrador",
@@ -30,15 +34,22 @@ export default function UsersPage() {
   const roleRef = useRef<HTMLDivElement>(null);
 
   const [openViewModal, setOpenViewModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDisableModal, setOpenDisableModal] = useState(false);
+  const [openAssignStudentsModal, setOpenAssignStudentsModal] = useState(false);
+  const [openAssignSubjectsModal, setOpenAssignSubjectsModal] = useState(false);
   const [selectedId, setSelectedId] = useState<number | string | null>(null);
+  const [assignUserRole, setAssignUserRole] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<{ name: string; active: boolean } | null>(null);
+
+  const fetchUsers = async () => {
+    const res = await fetch("/api/users/minimal"); // endpoint que ya tenemos
+    const data = await res.json();
+    setUsers(data);
+    setFilteredUsers(data);
+  };
 
   useEffect(() => {
-    async function fetchUsers() {
-      const res = await fetch("/api/users/minimal"); // endpoint que ya tenemos
-      const data = await res.json();
-      setUsers(data);
-      setFilteredUsers(data);
-    }
     fetchUsers();
   }, []);
 
@@ -139,15 +150,34 @@ export default function UsersPage() {
             name={`${user.firstName} ${user.lastName}`}
             role={user.role}
             active={user.active}
-            onEdit={(id: number) => console.log("Edit user:", id)}
+            onEdit={(id: number) => {
+              setSelectedId(id);
+              setOpenEditModal(true);
+            }}
             onView={(id: number) => {
               setSelectedId(id);
               setOpenViewModal(true);
             }}
-            onDisable={(id: number) => console.log("Toggle active:", id)}
-            onAssign={(id: number) =>
-              console.log("Assign action for user:", id)
-            }
+            onDisable={(id: number) => {
+              const user = users.find(u => u.id === id);
+              if (user) {
+                setSelectedId(id);
+                setSelectedUser({
+                  name: `${user.firstName} ${user.lastName}`,
+                  active: user.active
+                });
+                setOpenDisableModal(true);
+              }
+            }}
+            onAssign={(id: number, role: string) => {
+              setSelectedId(id);
+              setAssignUserRole(role);
+              if (role === "TUTOR") {
+                setOpenAssignStudentsModal(true);
+              } else if (role === "TEACHER") {
+                setOpenAssignSubjectsModal(true);
+              }
+            }}
           />
         ))}
       </div>
@@ -155,6 +185,78 @@ export default function UsersPage() {
         id={selectedId}
         open={openViewModal}
         onClose={() => setOpenViewModal(false)}
+      />
+      <UserEditModal
+        id={selectedId as number}
+        open={openEditModal}
+        onClose={() => setOpenEditModal(false)}
+        onUpdated={() => {
+          // Refresh the users list after update
+          fetchUsers();
+        }}
+      />
+      <UserDisableModal
+        id={selectedId as number}
+        name={selectedUser?.name || ""}
+        active={selectedUser?.active || false}
+        open={openDisableModal}
+        onClose={() => setOpenDisableModal(false)}
+        onUpdated={() => {
+          // Refresh the users list after update
+          fetchUsers();
+        }}
+      />
+      <AssignStudentsModal
+        isOpen={openAssignStudentsModal}
+        onClose={() => setOpenAssignStudentsModal(false)}
+        userId={selectedId as number}
+        isNew={false}
+        onConfirm={async (studentIds: number[]) => {
+          try {
+            const res = await fetch(`/api/users/${selectedId}/students`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ studentIds }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+              console.error("Error assigning students:", data.error);
+              // You could add a toast notification here to show the error
+            } else {
+              console.log("Students assigned successfully");
+              // You could add a success notification here
+            }
+          } catch (error) {
+            console.error("Error assigning students:", error);
+          }
+        }}
+      />
+      <AssignSubjectsModal
+        isOpen={openAssignSubjectsModal}
+        onClose={() => setOpenAssignSubjectsModal(false)}
+        userId={selectedId as number}
+        isNew={false}
+        onConfirm={async (subjectIds: number[]) => {
+          try {
+            const res = await fetch(`/api/users/${selectedId}/subjects`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ subjectIds }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+              console.error("Error assigning subjects:", data.error);
+              // You could add a toast notification here to show the error
+            } else {
+              console.log("Subjects assigned successfully");
+              // You could add a success notification here
+            }
+          } catch (error) {
+            console.error("Error assigning subjects:", error);
+          }
+        }}
       />
     </div>
   );

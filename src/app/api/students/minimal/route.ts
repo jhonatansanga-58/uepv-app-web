@@ -17,6 +17,7 @@ export async function GET(request: Request) {
           },
         },
       },
+      where: { tutorId: null },
       orderBy: {
         user: {
           lastName: "asc",

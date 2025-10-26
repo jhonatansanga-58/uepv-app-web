@@ -17,7 +17,7 @@ export default function UserCard({
   onEdit: (id: number) => void;
   onView: (id: number) => void;
   onDisable: (id: number) => void;
-  onAssign: (id: number) => void;
+  onAssign: (id: number, role: string) => void;
 }) {
   return (
     <div
@@ -68,7 +68,7 @@ export default function UserCard({
         </button>
         {(role === "TUTOR" || role === "TEACHER") && (
           <button
-            onClick={() => onAssign(id)}
+            onClick={() => onAssign(id, role)}
             className="bg-purple-500 hover:bg-purple-600 text-white p-2 rounded"
             title={role === "TUTOR" ? "Editar estudiantes" : "Editar materias"}
           >

@@ -55,7 +55,7 @@ model Student {
   cardCode         String         @unique
   courseParallelId Int
   courseParallel   CourseParallel @relation(fields: [courseParallelId], references: [id])
-  tutorships           StudentTutor[]
+  tutorships       StudentTutor[]
   meetings         Meeting[]      @relation("StudentMeeting")
   attendances      Attendance[]
   leaveRequests    LeaveRequest[]
@@ -72,6 +72,7 @@ model StudentTutor {
 model Course {
   id        Int              @id @default(autoincrement())
   name      String           @unique
+  active    Boolean        @default(true)
   parallels CourseParallel[]
 
   CourseSubject CourseSubject[]
@@ -87,6 +88,7 @@ model CourseParallel {
   id            Int            @id @default(autoincrement())
   courseId      Int
   parallelId    Int
+  active        Boolean        @default(true)
   course        Course         @relation(fields: [courseId], references: [id])
   parallel      Parallel       @relation(fields: [parallelId], references: [id])
   students      Student[]

@@ -84,9 +84,9 @@ async function main() {
   // Crear cursos y paralelos
   const courses = await prisma.course.createMany({
     data: [
-      { name: '1ro Secundaria' },
-      { name: '2do Secundaria' },
-      { name: '3ro Secundaria' },
+      { name: '1ro Secundaria', active: true },
+      { name: '2do Secundaria', active: true },
+      { name: '3ro Secundaria', active: true },
     ],
   });
 
@@ -98,7 +98,11 @@ async function main() {
   const courseParallelsData = [];
   for (let courseId = 1; courseId <= 3; courseId++) {
     for (let parallelId = 1; parallelId <= 3; parallelId++) {
-      courseParallelsData.push({ courseId, parallelId });
+      courseParallelsData.push({ 
+        courseId, 
+        parallelId,
+        active: true
+      });
     }
   }
   await prisma.courseParallel.createMany({ data: courseParallelsData });

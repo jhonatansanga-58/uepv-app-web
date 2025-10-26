@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Crear el perfil de estudiante
+    // 3. Crear el perfil de estudiante (sin tutorId, usaremos StudentTutor)
     const newStudent = await prisma.student.create({
       data: {
         id: newUser.id,
@@ -132,7 +132,6 @@ export async function POST(req: NextRequest) {
         gender: gender || null,
         cardCode,
         courseParallelId: courseParallel.id,
-        tutorId: parseInt(body.tutorId) || null,
       },
       include: {
         user: true,
@@ -142,9 +141,18 @@ export async function POST(req: NextRequest) {
             parallel: true,
           },
         },
-        tutor: true,
       },
     });
+
+    // 4. Si se proporcionó un tutorId, crear la relación en StudentTutor
+    if (body.tutorId && !isNaN(parseInt(body.tutorId))) {
+      await (prisma as any).studentTutor.create({
+        data: {
+          studentId: newStudent.id,
+          tutorId: parseInt(body.tutorId),
+        },
+      });
+    }
 
     return NextResponse.json(newStudent, { status: 201 });
   } catch (error) {

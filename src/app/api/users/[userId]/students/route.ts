@@ -14,17 +14,20 @@ export async function PUT(
     const body = await request.json();
     const studentIds: number[] = body.studentIds || [];
 
-    // Primero, eliminamos asignaciones existentes
-    await prisma.student.updateMany({
+    // Primero, eliminamos todas las asignaciones existentes del tutor
+    await (prisma as any).studentTutor.deleteMany({
       where: { tutorId: userId },
-      data: { tutorId: null },
     });
 
-    // Luego, asignamos los nuevos estudiantes
-    await prisma.student.updateMany({
-      where: { id: { in: studentIds } },
-      data: { tutorId: userId },
-    });
+    // Luego, creamos las nuevas asignaciones
+    if (studentIds.length > 0) {
+      await (prisma as any).studentTutor.createMany({
+        data: studentIds.map((studentId: number) => ({
+          studentId,
+          tutorId: userId,
+        })),
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

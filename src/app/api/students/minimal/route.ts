@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     const userId = searchParams.get("userId");
 
     // Lista general de estudiantes
-    const students = await prisma.student.findMany({
+    const allStudents = await prisma.student.findMany({
       select: {
         id: true,
         user: {
@@ -17,7 +17,6 @@ export async function GET(request: Request) {
           },
         },
       },
-      where: { tutorId: null },
       orderBy: {
         user: {
           lastName: "asc",
@@ -25,12 +24,8 @@ export async function GET(request: Request) {
       },
     });
 
-    const all = students.map((s) => ({
-      id: s.id,
-      fullName: `${s.user.firstName} ${s.user.lastName}`,
-    }));
-
     let assigned: { id: number; fullName: string }[] = [];
+    let all: { id: number; fullName: string }[] = [];
 
     // Si hay userId, buscar estudiantes asignados a ese padre
     if (userId !== null) {
@@ -39,18 +34,38 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "userId inválido" }, { status: 400 });
       }
 
-      const assignedRows = await prisma.student.findMany({
+      // Obtener estudiantes asignados al tutor usando StudentTutor
+      const assignedStudents = await (prisma as any).studentTutor.findMany({
         where: { tutorId },
         select: {
-          id: true,
-          user: { select: { firstName: true, lastName: true } },
-        },
-        orderBy: {
-          user: { firstName: "asc" },
+          student: {
+            select: {
+              id: true,
+              user: { select: { firstName: true, lastName: true } },
+            },
+          },
         },
       });
 
-      assigned = assignedRows.map((s) => ({
+      assigned = assignedStudents.map((st: any) => ({
+        id: st.student.id,
+        fullName: `${st.student.user.firstName} ${st.student.user.lastName}`,
+      }));
+
+      // Obtener IDs de estudiantes ya asignados a este tutor
+      const assignedIds = new Set(assignedStudents.map((st: any) => st.student.id));
+
+      // "all" debe contener todos los estudiantes que NO están asignados a este tutor específico
+      // (pueden tener otros tutores asignados, pero eso no importa)
+      all = allStudents
+        .filter(s => !assignedIds.has(s.id))
+        .map((s) => ({
+          id: s.id,
+          fullName: `${s.user.firstName} ${s.user.lastName}`,
+        }));
+    } else {
+      // Sin userId, retornar todos los estudiantes
+      all = allStudents.map((s) => ({
         id: s.id,
         fullName: `${s.user.firstName} ${s.user.lastName}`,
       }));

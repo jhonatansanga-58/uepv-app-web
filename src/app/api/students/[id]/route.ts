@@ -19,7 +19,11 @@ export async function GET(req: Request, context: { params: { id: string } }) {
             parallel: true,
           },
         },
-        tutor: true,
+        tutorships: {
+          include: {
+            tutor: true,
+          },
+        },
       },
     });
 
@@ -85,7 +89,11 @@ export async function PATCH(
             parallel: true,
           },
         },
-        tutor: true,
+        tutorships: {
+          include: {
+            tutor: true,
+          },
+        },
       },
     });
 

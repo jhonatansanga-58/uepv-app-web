@@ -23,13 +23,16 @@ type StudentDetail = {
     course: { name: string };
     parallel: { name: string };
   };
-  tutor?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string | null;
-    address?: string | null;
-  } | null;
+  tutorships: Array<{
+    id: number;
+    tutor: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string | null;
+      address?: string | null;
+    };
+  }> | null;
 };
 
 export default function StudentInfoModal({ id, open, onClose }: Props) {
@@ -77,10 +80,10 @@ export default function StudentInfoModal({ id, open, onClose }: Props) {
                   <strong>Fecha de Nacimiento:</strong>{" "}
                   {student.birthDate
                     ? new Date(student.birthDate).toLocaleString("es-BO", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
                     : "No especificada"}
                 </p>
                 <p>
@@ -88,10 +91,10 @@ export default function StudentInfoModal({ id, open, onClose }: Props) {
                   {student.gender === "MALE"
                     ? "Masculino"
                     : student.gender === "FEMALE"
-                    ? "Femenino"
-                    : student.gender === "OTHER"
-                    ? "Otro"
-                    : "No especificado"}
+                      ? "Femenino"
+                      : student.gender === "OTHER"
+                        ? "Otro"
+                        : "No especificado"}
                 </p>
                 <p>
                   <strong>Teléfono:</strong>{" "}
@@ -121,28 +124,33 @@ export default function StudentInfoModal({ id, open, onClose }: Props) {
 
             <div>
               <h3 className="text-base font-semibold text-gray-800 mb-2">
-                Tutor
+                Tutores
               </h3>
-              {student.tutor ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <p>
-                    <strong>Nombre:</strong> {student.tutor.firstName}{" "}
-                    {student.tutor.lastName}
-                  </p>
-                  <p>
-                    <strong>Correo:</strong> {student.tutor.email}
-                  </p>
-                  <p>
-                    <strong>Teléfono:</strong>{" "}
-                    {student.tutor.phone || "No registrado"}
-                  </p>
-                  <p>
-                    <strong>Dirección:</strong>{" "}
-                    {student.tutor.address || "No registrada"}
-                  </p>
-                </div>
+              {student.tutorships && student.tutorships.length > 0 ? (
+                student.tutorships.map((tutorship) => (
+                  <div
+                    key={tutorship.id}
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 p-3 bg-gray-50 rounded-lg"
+                  >
+                    <p>
+                      <strong>Nombre:</strong> {tutorship.tutor.firstName}{" "}
+                      {tutorship.tutor.lastName}
+                    </p>
+                    <p>
+                      <strong>Correo:</strong> {tutorship.tutor.email}
+                    </p>
+                    <p>
+                      <strong>Teléfono:</strong>{" "}
+                      {tutorship.tutor.phone || "No registrado"}
+                    </p>
+                    <p>
+                      <strong>Dirección:</strong>{" "}
+                      {tutorship.tutor.address || "No registrada"}
+                    </p>
+                  </div>
+                ))
               ) : (
-                <p className="italic text-gray-500">No asignado</p>
+                <p className="italic text-gray-500">No hay tutores asignados</p>
               )}
             </div>
           </div>

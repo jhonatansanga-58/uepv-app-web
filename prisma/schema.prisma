@@ -72,7 +72,7 @@ model StudentTutor {
 model Course {
   id        Int              @id @default(autoincrement())
   name      String           @unique
-  active    Boolean        @default(true)
+  active    Boolean          @default(true)
   parallels CourseParallel[]
 
   CourseSubject CourseSubject[]
@@ -99,6 +99,7 @@ model CourseParallel {
 model Subject {
   id       Int              @id @default(autoincrement())
   name     String           @unique
+  active   Boolean          @default(true)
   teachers TeacherSubject[]
   courses  CourseSubject[]
   tasks    Task[]

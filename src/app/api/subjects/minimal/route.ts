@@ -9,6 +9,7 @@ export async function GET(request: Request) {
     // 1) Lista completa (id + name)
     const subjects = await prisma.subject.findMany({
       select: { id: true, name: true },
+      where: { active: true },
       orderBy: { name: "asc" },
     });
 
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
 
       // Busca las materias asociadas al profesor en TeacherSubject
       const teacherSubjects = await prisma.teacherSubject.findMany({
-        where: { teacherId },
+        where: { teacherId, subject: { active: true } },
         select: {
           subject: { select: { id: true, name: true } },
         },

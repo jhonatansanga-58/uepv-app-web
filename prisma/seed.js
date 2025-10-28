@@ -29,8 +29,8 @@ async function main() {
   // Crear administradores
   const admins = await prisma.user.createMany({
     data: [
-      { firstName: 'Admin', lastName: 'Principal', email: 'admin@uepv.edu', password: defaultPassword, role: 'ADMIN' },
-      { firstName: 'María', lastName: 'González', email: 'maria.admin@uepv.edu', password: defaultPassword, role: 'ADMIN' },
+      { firstName: 'Admin', lastName: 'Principal', userName: 'adm001', email: 'admin@uepv.edu', password: defaultPassword, role: 'ADMIN' },
+      { firstName: 'María', lastName: 'González', userName: 'adm002', email: 'maria.admin@uepv.edu', password: defaultPassword, role: 'ADMIN' },
     ],
   });
   console.log('✅ Administradores creados.');
@@ -38,11 +38,11 @@ async function main() {
   // Crear profesores
   const teachers = await prisma.user.createMany({
     data: [
-      { firstName: 'Ana', lastName: 'López', email: 'ana.lopez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123456', address: 'Av. Principal 123' },
-      { firstName: 'Carlos', lastName: 'Pérez', email: 'carlos.perez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123457', address: 'Calle 2da 456' },
-      { firstName: 'Laura', lastName: 'Gómez', email: 'laura.gomez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123458', address: 'Zona Norte 789' },
-      { firstName: 'Miguel', lastName: 'Rodríguez', email: 'miguel.rodriguez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123459', address: 'Barrio Centro 321' },
-      { firstName: 'Sofia', lastName: 'Martínez', email: 'sofia.martinez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123460', address: 'Zona Sur 654' },
+      { firstName: 'Ana', lastName: 'López', userName: 'prof001', email: 'ana.lopez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123456', address: 'Av. Principal 123' },
+      { firstName: 'Carlos', lastName: 'Pérez', userName: 'prof002', email: 'carlos.perez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123457', address: 'Calle 2da 456' },
+      { firstName: 'Laura', lastName: 'Gómez', userName: 'prof003', email: 'laura.gomez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123458', address: 'Zona Norte 789' },
+      { firstName: 'Miguel', lastName: 'Rodríguez', userName: 'prof004', email: 'miguel.rodriguez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123459', address: 'Barrio Centro 321' },
+      { firstName: 'Sofia', lastName: 'Martínez', userName: 'prof005', email: 'sofia.martinez@uepv.edu', password: defaultPassword, role: 'TEACHER', phone: '70123460', address: 'Zona Sur 654' },
     ],
   });
   console.log('✅ Profesores creados.');
@@ -50,11 +50,11 @@ async function main() {
   // Crear tutores
   const tutors = await prisma.user.createMany({
     data: [
-      { firstName: 'Pedro', lastName: 'Fernández', email: 'pedro.fernandez@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123461', address: 'Av. Libertad 100' },
-      { firstName: 'Carmen', lastName: 'Vargas', email: 'carmen.vargas@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123462', address: 'Calle 3ra 200' },
-      { firstName: 'Luis', lastName: 'Suárez', email: 'luis.suarez@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123463', address: 'Zona Este 300' },
-      { firstName: 'Elena', lastName: 'Torres', email: 'elena.torres@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123464', address: 'Barrio Oeste 400' },
-      { firstName: 'Jorge', lastName: 'Jiménez', email: 'jorge.jimenez@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123465', address: 'Av. Central 500' },
+      { firstName: 'Pedro', lastName: 'Fernández', userName: 'tut001', email: 'pedro.fernandez@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123461', address: 'Av. Libertad 100' },
+      { firstName: 'Carmen', lastName: 'Vargas', userName: 'tut002', email: 'carmen.vargas@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123462', address: 'Calle 3ra 200' },
+      { firstName: 'Luis', lastName: 'Suárez', userName: 'tut003', email: 'luis.suarez@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123463', address: 'Zona Este 300' },
+      { firstName: 'Elena', lastName: 'Torres', userName: 'tut004', email: 'elena.torres@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123464', address: 'Barrio Oeste 400' },
+      { firstName: 'Jorge', lastName: 'Jiménez', userName: 'tut005', email: 'jorge.jimenez@email.com', password: defaultPassword, role: 'TUTOR', phone: '70123465', address: 'Av. Central 500' },
     ],
   });
   console.log('✅ Tutores creados.');
@@ -111,21 +111,21 @@ async function main() {
   // Crear estudiantes
   const students = await prisma.user.createMany({
     data: [
-      { firstName: 'Lucía', lastName: 'Fernández', email: 'lucia.fernandez@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Mario', lastName: 'Vargas', email: 'mario.vargas@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Camila', lastName: 'Suárez', email: 'camila.suarez@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Andrés', lastName: 'Torres', email: 'andres.torres@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Valeria', lastName: 'Jiménez', email: 'valeria.jimenez@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Diego', lastName: 'Morales', email: 'diego.morales@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Isabella', lastName: 'Castro', email: 'isabella.castro@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Sebastián', lastName: 'Rojas', email: 'sebastian.rojas@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Natalia', lastName: 'Herrera', email: 'natalia.herrera@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Gabriel', lastName: 'Mendoza', email: 'gabriel.mendoza@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Alejandra', lastName: 'Guerrero', email: 'alejandra.guerrero@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Fernando', lastName: 'Ramos', email: 'fernando.ramos@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Paola', lastName: 'Flores', email: 'paola.flores@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Ricardo', lastName: 'Aguilar', email: 'ricardo.aguilar@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
-      { firstName: 'Daniela', lastName: 'Vega', email: 'daniela.vega@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Lucía', lastName: 'Fernández', userName: 'stu001', email: 'lucia.fernandez@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Mario', lastName: 'Vargas', userName: 'stu002', email: 'mario.vargas@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Camila', lastName: 'Suárez', userName: 'stu003', email: 'camila.suarez@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Andrés', lastName: 'Torres', userName: 'stu004', email: 'andres.torres@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Valeria', lastName: 'Jiménez', userName: 'stu005', email: 'valeria.jimenez@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Diego', lastName: 'Morales', userName: 'stu006', email: 'diego.morales@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Isabella', lastName: 'Castro', userName: 'stu007', email: 'isabella.castro@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Sebastián', lastName: 'Rojas', userName: 'stu008', email: 'sebastian.rojas@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Natalia', lastName: 'Herrera', userName: 'stu009', email: 'natalia.herrera@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Gabriel', lastName: 'Mendoza', userName: 'stu010', email: 'gabriel.mendoza@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Alejandra', lastName: 'Guerrero', userName: 'stu011', email: 'alejandra.guerrero@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Fernando', lastName: 'Ramos', userName: 'stu012', email: 'fernando.ramos@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Paola', lastName: 'Flores', userName: 'stu013', email: 'paola.flores@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Ricardo', lastName: 'Aguilar', userName: 'stu014', email: 'ricardo.aguilar@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
+      { firstName: 'Daniela', lastName: 'Vega', userName: 'stu015', email: 'daniela.vega@student.uepv.edu', password: defaultPassword, role: 'STUDENT' },
     ],
   });
   

@@ -3,8 +3,14 @@
 import { Button, Card, Label, TextInput } from 'flowbite-react';
 import { useState } from 'react';
 import { HiLockClosed, HiUser } from 'react-icons/hi';
+import { signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
@@ -15,12 +21,22 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
-    // We'll implement this later with NextAuth
     try {
-      // Will be replaced with signIn() from next-auth
-      console.log('Login attempt:', { usernameOrEmail, password });
+      const result = await signIn('credentials', {
+        usernameOrEmail,
+        password,
+        redirect: false,
+      });
+
+      if (!result?.error) {
+        // Successful login
+        router.replace(callbackUrl);
+      } else {
+        // Show error
+        setError('Invalid credentials. Please try again.');
+      }
     } catch {
-      setError('Failed to sign in. Please check your credentials.');
+      setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }

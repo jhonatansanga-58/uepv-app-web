@@ -8,11 +8,12 @@ import {
   NavbarToggle,
 } from "flowbite-react";
 import { usePathname } from "next/navigation";
-
+import { useSession } from "next-auth/react";
 import { HiUserCircle } from "react-icons/hi";
 
 export function NavBarComponent() {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   // Define the navbar text based on the current route
   const getNavbarText = () => {
@@ -50,12 +51,18 @@ export function NavBarComponent() {
 
       {/* Datos del usuario */}
       <NavbarCollapse>
-        <NavbarLink href="#" className="flex items-center gap-2">
+        <NavbarLink href="" className="flex items-center gap-2">
           <div className="flex flex-col text-right leading-tight">
             <span className="text-lg font-medium text-gray-200">
-              Jhonatan58
+              {session?.user?.name ?? 'Cargando...'}
             </span>
-            <span className="text-md text-gray-300">Administrador</span>
+            <span className="text-md text-gray-300">
+              {session?.user?.role === 'ADMIN' ? 'Administrador' :
+                session?.user?.role === 'TEACHER' ? 'Profesor' :
+                  session?.user?.role === 'TUTOR' ? 'Tutor' :
+                    session?.user?.role === 'STUDENT' ? 'Estudiante' :
+                      'Cargando...'}
+            </span>
           </div>
           <HiUserCircle className="w-11 h-11 text-white" />
         </NavbarLink>

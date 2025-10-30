@@ -70,6 +70,7 @@ const handler = NextAuth({
       if (user) {
         return {
           ...token,
+          id: user.id,
           userName: user.userName,
           role: user.role,
         };
@@ -82,6 +83,7 @@ const handler = NextAuth({
         ...session,
         user: {
           ...session.user,
+          id: token.id,
           userName: token.userName,
           role: token.role,
         },

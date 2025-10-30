@@ -46,6 +46,7 @@ model User {
   notifications       Notification[]
 
   TeacherSubject TeacherSubject[]
+  LeaveRequest   LeaveRequest[]
 }
 
 model Student {
@@ -137,12 +138,21 @@ model Attendance {
 }
 
 model LeaveRequest {
-  id          Int         @id @default(autoincrement())
-  studentId   Int
-  reason      String
-  requestDate DateTime    @default(now())
-  status      LeaveStatus @default(PENDING)
-  student     Student     @relation(fields: [studentId], references: [id])
+  id              Int         @id @default(autoincrement())
+  studentId       Int
+  tutorId         Int
+  title           String
+  message         String
+  reason          String
+  startDate       DateTime?
+  endDate         DateTime?
+  requestDate     DateTime    @default(now())
+  status          LeaveStatus @default(PENDING)
+  active          Boolean     @default(true) // para habilitar/deshabilitar
+  rejectionReason String?
+  updatedAt       DateTime    @updatedAt
+  student         Student     @relation(fields: [studentId], references: [id])
+  tutor           User        @relation(fields: [tutorId], references: [id])
 }
 
 model Task {

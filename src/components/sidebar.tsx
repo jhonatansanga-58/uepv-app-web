@@ -9,11 +9,14 @@ import {
   Button,
 } from "flowbite-react";
 
-import { HiAcademicCap, HiUserGroup, HiLogout } from "react-icons/hi";
+import { HiAcademicCap, HiUserGroup, HiLogout, HiClipboardList } from "react-icons/hi";
 import Image from "next/image";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export function SideBarComponent() {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
   return (
     <Sidebar
       aria-label="Default sidebar"
@@ -29,44 +32,68 @@ export function SideBarComponent() {
       <div className="flex-1 overflow-y-auto">
         <SidebarItems className="flex flex-col">
           <SidebarItemGroup>
-            <SidebarCollapse
-              icon={() => <HiUserGroup className="text-white w-6 h-6" />}
-              label="Estudiantes"
-              open={true}
-              className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
-            >
-              <SidebarItem href="/admin/students">Lista</SidebarItem>
-              <SidebarItem href="/admin/students/create">
-                Registrar nuevo
-              </SidebarItem>
-            </SidebarCollapse>
+            {/* Admin-only sections */}
+            {userRole === 'ADMIN' && (
+              <>
+                <SidebarCollapse
+                  icon={() => <HiUserGroup className="text-white w-6 h-6" />}
+                  label="Estudiantes"
+                  open={true}
+                  className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
+                >
+                  <SidebarItem href="/admin/students">Lista</SidebarItem>
+                  <SidebarItem href="/admin/students/create">
+                    Registrar nuevo
+                  </SidebarItem>
+                </SidebarCollapse>
 
-            <SidebarCollapse
-              icon={() => <HiUserGroup className="text-white w-6 h-6" />}
-              label="Usuarios"
-              open={true}
-              className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
-            >
-              <SidebarItem href="/admin/users">Lista</SidebarItem>
-              <SidebarItem href="/admin/users/create">
-                Registrar nuevo
-              </SidebarItem>
-            </SidebarCollapse>
+                <SidebarCollapse
+                  icon={() => <HiUserGroup className="text-white w-6 h-6" />}
+                  label="Usuarios"
+                  open={true}
+                  className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
+                >
+                  <SidebarItem href="/admin/users">Lista</SidebarItem>
+                  <SidebarItem href="/admin/users/create">
+                    Registrar nuevo
+                  </SidebarItem>
+                </SidebarCollapse>
 
-            <SidebarCollapse
-              icon={() => <HiAcademicCap className="text-white w-6 h-6" />}
-              label="Organización escolar"
-              open={true}
-              className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
-            >
-              <SidebarItem href="/admin/courses">
-                Cursos
-              </SidebarItem>
-              <SidebarItem href="/admin/subjects">
-                Materias
-              </SidebarItem>
-            </SidebarCollapse>
+                <SidebarCollapse
+                  icon={() => <HiAcademicCap className="text-white w-6 h-6" />}
+                  label="Organización escolar"
+                  open={true}
+                  className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
+                >
+                  <SidebarItem href="/admin/courses">
+                    Cursos
+                  </SidebarItem>
+                  <SidebarItem href="/admin/subjects">
+                    Materias
+                  </SidebarItem>
+                </SidebarCollapse>
+              </>
+            )}
 
+            {/* Leave requests section - visible to both ADMIN and TUTOR */}
+            {(userRole === 'ADMIN' || userRole === 'TUTOR') && (
+              <SidebarCollapse
+                icon={() => <HiClipboardList className="text-white w-6 h-6" />}
+                label="Licencias"
+                open={true}
+                className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
+              >
+                {userRole === 'TUTOR' && (
+                  <>
+                    <SidebarItem href="/leaves/mine">Mis licencias</SidebarItem>
+                    <SidebarItem href="/leaves/new">Registrar nueva</SidebarItem>
+                  </>
+                )}
+                {userRole === 'ADMIN' && (
+                  <SidebarItem href="/leaves">Revisar</SidebarItem>
+                )}
+              </SidebarCollapse>
+            )}
           </SidebarItemGroup>
         </SidebarItems>
       </div>

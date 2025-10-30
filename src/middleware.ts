@@ -11,6 +11,12 @@ const roleMap: { prefix: string; roles: string[] }[] = [
   { prefix: '/api/admin', roles: ['ADMIN'] },
   { prefix: '/api/teacher', roles: ['ADMIN', 'TEACHER'] },
   { prefix: '/dashboard', roles: ['ADMIN', 'TEACHER', 'TUTOR', 'STUDENT'] },
+  // Tutors API
+  { prefix: '/api/tutors', roles: ['ADMIN', 'TUTOR'] },
+  // Leave request APIs (general): tutors can create/manage their requests, admins can review
+  { prefix: '/api/leaverequest', roles: ['ADMIN', 'TUTOR'] },
+  // Frontend leave request routes
+  { prefix: '/leaves', roles: ['ADMIN', 'TUTOR'] },
 ];
 
 // Skip these paths from middleware checks
@@ -71,6 +77,9 @@ export const config = {
     '/teacher/:path*',
     '/api/admin/:path*',
     '/api/teacher/:path*',
+    '/api/tutors/:path*',
+    '/api/leaverequest/:path*',
     '/dashboard/:path*',
+    '/leaves/:path*',
   ],
 };

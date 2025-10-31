@@ -90,9 +90,22 @@ export default function TutorLeavesPage() {
 
   return (
     <div className="w-full h-full overflow-x-auto rounded-md p-4">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Mis Licencias</h2>
-      </div>
+      <table className="w-full table-auto text-left text-sm text-gray-700">
+        <thead className="bg-gray-100">
+          <tr className="border-b border-gray-300">
+            <th className="px-6 py-3 w-1/2 font-semibold text-gray-800">
+              Licencia
+            </th>
+            <th className="px-6 py-3 w-1/4 font-semibold text-gray-800">
+              Estado
+            </th>
+            <th className="px-6 py-3 w-auto font-semibold text-gray-800">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
       {isLoading ? (
         <p>Cargando licencias...</p>

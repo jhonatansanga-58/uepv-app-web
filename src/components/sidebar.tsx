@@ -24,7 +24,7 @@ export function SideBarComponent() {
     >
       {/* Encabezado con escudo */}
       <div className="flex flex-col items-center py-6 gap-2">
-        <Image src="/escudo.png" alt="Escudo UEPV" width={72} height={72} />
+        <Image src="/escudo.png" alt="Escudo UEPV" width={100} height={100} />
         <span className="text-xl font-bold text-neutral-dark">UEPV</span>
       </div>
 

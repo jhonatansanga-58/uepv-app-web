@@ -72,7 +72,6 @@ export default function NewLeavePage() {
     <Card className="max-w-3xl mx-auto my-8">
       <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleSubmit}>
         <div className="md:col-span-2 mb-2">
-          <h2 className="text-2xl font-bold">Registrar nueva licencia</h2>
           {error && <Alert color="failure" className="mt-2">{error}</Alert>}
         </div>
         <div>

@@ -1,10 +1,12 @@
-import { Modal, ModalBody, ModalHeader, Button } from "flowbite-react";
+import { Modal, Button, ModalBody, ModalHeader } from "flowbite-react";
 import { useEffect, useState } from "react";
 
 type Props = {
   id: number | null;
-  open: boolean;
+  open: boolean | false;
   onClose: () => void;
+  isAdmin?: boolean;
+  onConfirmAction?: (action: "APPROVED" | "REJECTED") => void;
 };
 
 type LeaveDetail = {
@@ -27,12 +29,12 @@ type LeaveDetail = {
   counts?: { approvedCount: number; pendingCount: number; rejectedCount: number };
 };
 
-export default function LeaveInfoModal({ id, open, onClose }: Props) {
+export default function LeaveInfoModal({ id: id, open: open, onClose, isAdmin, onConfirmAction }: Props) {
   const [leave, setLeave] = useState<LeaveDetail | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!open || id === null) return;
+    if (!open || !id) return;
     setLoading(true);
     fetch(`/api/leaverequest/${id}`)
       .then((res) => res.json())
@@ -120,8 +122,22 @@ export default function LeaveInfoModal({ id, open, onClose }: Props) {
               </div>
             )}
 
-            <div className="text-right">
-              <Button className="w-full" onClick={onClose}>Cerrar</Button>
+            <div className="flex justify-between items-center gap-4">
+              <div className="flex gap-2">
+                {isAdmin && leave.status === "PENDING" && (
+                  <>
+                    <Button className="bg-green-500 hover:bg-green-600" onClick={() => onConfirmAction?.("APPROVED")}>
+                      Aprobar
+                    </Button>
+                    <Button className="bg-red-500 hover:bg-red-600" onClick={() => onConfirmAction?.("REJECTED")}>
+                      Rechazar
+                    </Button>
+                  </>
+                )}
+              </div>
+              <Button className="bg-gray-500 hover:bg-gray-600" onClick={onClose}>
+                Cerrar
+              </Button>
             </div>
           </div>
         ) : (

@@ -30,6 +30,12 @@ export function NavBarComponent() {
         return "Gestión de cursos";
       case "/admin/subjects":
         return "Gestión de materias";
+      case "/leaves":
+        return "Licencias";
+      case "/leaves/new":
+        return "Registrar nueva licencia";
+      case "/leaves/mine":
+        return "Mis licencias";
       default:
         return "Gestión de estudiantes"; // Default fallback
     }

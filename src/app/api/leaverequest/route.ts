@@ -51,9 +51,9 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   // This handler returns leave requests filtered by status for admins only when query `status` provided
   try {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  type TokenWithRole = { role?: string };
-  const role = (token as TokenWithRole)?.role;
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    type TokenWithRole = { role?: string };
+    const role = (token as TokenWithRole)?.role;
 
     if (role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -67,15 +67,20 @@ export async function GET(req: NextRequest) {
     const statusParam = status as LeaveStatus;
 
     const requests = await prisma.leaveRequest.findMany({
-      where: { status: statusParam },
+      where: { status: statusParam, active: true },
       orderBy: { requestDate: "desc" },
       include: {
-        student: { include: { user: true, courseParallel: { include: { course: true, parallel: true } } } },
+        student: { include: { user: true } },
         tutor: true,
       },
     });
+    const formattedRequests = requests.map((lr) => ({
+      id: lr.id,
+      student: `${lr.student.user.firstName} ${lr.student.user.lastName}`,
+      tutor: `${lr.tutor.firstName} ${lr.tutor.lastName}`,
+    }));
 
-    return NextResponse.json(requests);
+    return NextResponse.json(formattedRequests);
   } catch (error) {
     console.error("[GET /api/leaverequest]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

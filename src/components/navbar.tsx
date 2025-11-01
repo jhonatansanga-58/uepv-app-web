@@ -36,8 +36,12 @@ export function NavBarComponent() {
         return "Registrar nueva licencia";
       case "/leaves/mine":
         return "Mis licencias";
+      case "/attendances/register":
+        return "Asistencias";
+      case "/attendances/history":
+        return "Historial";
       default:
-        return "Gestión de estudiantes"; // Default fallback
+        return ""; // Default fallback
     }
   };
 

@@ -94,6 +94,20 @@ export function SideBarComponent() {
                 )}
               </SidebarCollapse>
             )}
+            {/* Attendances section - register attendance (visible to TEACHER and ADMIN and TUTOR) */}
+            {userRole && (
+              <SidebarCollapse
+                icon={() => <HiClipboardList className="text-white w-6 h-6" />}
+                label="Asistencias"
+                open={true}
+                className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
+              >
+                {(userRole === 'ADMIN' || userRole === 'TEACHER') && (
+                  <SidebarItem href="/attendances/register">Registrar</SidebarItem>
+                )}
+                <SidebarItem href="/attendances/history">Historial</SidebarItem>
+              </SidebarCollapse>
+            )}
           </SidebarItemGroup>
         </SidebarItems>
       </div>

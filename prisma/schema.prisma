@@ -41,7 +41,7 @@ model User {
   active              Boolean        @default(true)
   studentProfile      Student?       @relation("UserStudent")
   tutorships          StudentTutor[]
-  attendancesRecorded Attendance[]   @relation("TeacherAttendance")
+  attendancesRecorded Attendance[]
   meetingsAsTeacher   Meeting[]      @relation("TeacherMeeting")
   notifications       Notification[]
 
@@ -130,11 +130,10 @@ model CourseSubject {
 model Attendance {
   id        Int      @id @default(autoincrement())
   studentId Int
-  teacherId Int
+  userId    Int?
   date      DateTime @default(now())
-  type      String // "entry" or "exit"
   student   Student  @relation(fields: [studentId], references: [id])
-  teacher   User     @relation("TeacherAttendance", fields: [teacherId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
 }
 
 model LeaveRequest {

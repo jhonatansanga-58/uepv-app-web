@@ -162,18 +162,20 @@ model Task {
   description      String
   sendDate         DateTime       @default(now())
   dueDate          DateTime
+  active           Boolean        @default(true)
   courseParallel   CourseParallel @relation("CourseParallelTasks", fields: [courseParallelId], references: [id])
   subject          Subject        @relation(fields: [subjectId], references: [id])
 }
 
 model Meeting {
   id        Int      @id @default(autoincrement())
-  teacherId Int
+  userId    Int
   studentId Int
   topic     String
   message   String
   date      DateTime @default(now())
-  teacher   User     @relation("TeacherMeeting", fields: [teacherId], references: [id])
+  active    Boolean  @default(true)
+  user      User     @relation("TeacherMeeting", fields: [userId], references: [id])
   student   Student  @relation("StudentMeeting", fields: [studentId], references: [id])
 }
 
@@ -184,6 +186,8 @@ model Notification {
   date             DateTime        @default(now())
   userId           Int?
   courseParallelId Int?
+  active           Boolean         @default(true)
+  creatorId        Int
   user             User?           @relation(fields: [userId], references: [id])
   courseParallel   CourseParallel? @relation(fields: [courseParallelId], references: [id])
 }

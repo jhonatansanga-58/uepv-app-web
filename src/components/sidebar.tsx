@@ -9,7 +9,7 @@ import {
   Button,
 } from "flowbite-react";
 
-import { HiAcademicCap, HiUserGroup, HiLogout, HiClipboardList } from "react-icons/hi";
+import { HiAcademicCap, HiUserGroup, HiLogout, HiClipboardList, HiBell, HiDocumentText } from "react-icons/hi";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 
@@ -78,7 +78,7 @@ export function SideBarComponent() {
             {/* Leave requests section - visible to both ADMIN and TUTOR */}
             {(userRole === 'ADMIN' || userRole === 'TUTOR') && (
               <SidebarCollapse
-                icon={() => <HiClipboardList className="text-white w-6 h-6" />}
+                icon={() => <HiDocumentText className="text-white w-6 h-6" />}
                 label="Licencias"
                 open={true}
                 className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
@@ -106,6 +106,21 @@ export function SideBarComponent() {
                   <SidebarItem href="/attendances/register">Registrar</SidebarItem>
                 )}
                 <SidebarItem href="/attendances/history">Historial</SidebarItem>
+              </SidebarCollapse>
+            )}
+            {/* Notices / Avisos */}
+            {userRole && (
+              <SidebarCollapse
+                icon={() => <HiBell className="text-white w-6 h-6" />}
+                label="Avisos"
+                open={true}
+                className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
+              >
+                <SidebarItem href="/notices/notifications">Comunicados</SidebarItem>
+                {userRole !== 'ADMIN' && (
+                  <SidebarItem href="/notices/tasks">Tareas</SidebarItem>
+                )}
+                <SidebarItem href="/notices/meetings">Citaciones</SidebarItem>
               </SidebarCollapse>
             )}
           </SidebarItemGroup>

@@ -78,14 +78,14 @@ export default function NotificationCard({
           <div className="flex flex-col md:flex-row justify-between gap-4">
             {/* Title column */}
             <div className="flex-1">
-              <h5 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+              <h5 className="text-xl font-bold tracking-tight text-gray-900">
                 {title}
               </h5>
             </div>
             
             {/* Destinatary/Creator column */}
             <div className="flex-1">
-              <p className="font-normal text-gray-700 dark:text-gray-400">
+              <p className="font-normal text-gray-700">
                 {secondColumnText}
               </p>
             </div>

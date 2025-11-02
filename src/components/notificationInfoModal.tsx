@@ -57,39 +57,39 @@ export default function NotificationInfoModal({
   return (
     <Modal show={open} onClose={onClose}>
       <div className="p-6">
-        <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-4">
+        <h3 className="text-xl font-medium text-gray-900">
           {title}
         </h3>
         <div className="space-y-6">
           <div>
-            <p className="font-semibold text-gray-700 dark:text-gray-300">
+            <p className="font-semibold text-gray-700">
               Mensaje:
             </p>
-            <p className="text-gray-500 dark:text-gray-400">{message}</p>
+            <p className="text-gray-500 ">{message}</p>
           </div>
           <div>
-            <p className="font-semibold text-gray-700 dark:text-gray-300">
+            <p className="font-semibold text-gray-700">
               Destinatario:
             </p>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500">
               {getDestinataryText()}
             </p>
           </div>
           <div>
-            <p className="font-semibold text-gray-700 dark:text-gray-300">
+            <p className="font-semibold text-gray-700">
               Creado por:
             </p>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500">
               {creator
                 ? `${creator.firstName} ${creator.lastName}`
                 : "Usuario no encontrado"}
             </p>
           </div>
           <div>
-            <p className="font-semibold text-gray-700 dark:text-gray-300">
+            <p className="font-semibold text-gray-700">
               Fecha:
             </p>
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500">
               {new Date(date).toLocaleString()}
             </p>
           </div>

@@ -38,7 +38,7 @@ export function SideBarComponent() {
                 <SidebarCollapse
                   icon={() => <HiUserGroup className="text-white w-6 h-6" />}
                   label="Estudiantes"
-                  open={true}
+                  open={false}
                   className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
                 >
                   <SidebarItem href="/admin/students">Lista</SidebarItem>
@@ -50,7 +50,7 @@ export function SideBarComponent() {
                 <SidebarCollapse
                   icon={() => <HiUserGroup className="text-white w-6 h-6" />}
                   label="Usuarios"
-                  open={true}
+                  open={false}
                   className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
                 >
                   <SidebarItem href="/admin/users">Lista</SidebarItem>
@@ -62,7 +62,7 @@ export function SideBarComponent() {
                 <SidebarCollapse
                   icon={() => <HiAcademicCap className="text-white w-6 h-6" />}
                   label="Organización escolar"
-                  open={true}
+                  open={false}
                   className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
                 >
                   <SidebarItem href="/admin/courses">
@@ -80,7 +80,7 @@ export function SideBarComponent() {
               <SidebarCollapse
                 icon={() => <HiDocumentText className="text-white w-6 h-6" />}
                 label="Licencias"
-                open={true}
+                open={false}
                 className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
               >
                 {userRole === 'TUTOR' && (
@@ -99,7 +99,7 @@ export function SideBarComponent() {
               <SidebarCollapse
                 icon={() => <HiClipboardList className="text-white w-6 h-6" />}
                 label="Asistencias"
-                open={true}
+                open={false}
                 className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
               >
                 {(userRole === 'ADMIN' || userRole === 'TEACHER') && (
@@ -113,7 +113,7 @@ export function SideBarComponent() {
               <SidebarCollapse
                 icon={() => <HiBell className="text-white w-6 h-6" />}
                 label="Avisos"
-                open={true}
+                open={false}
                 className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
               >
                 <SidebarItem href="/notices/notifications">Comunicados</SidebarItem>

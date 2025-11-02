@@ -18,23 +18,40 @@ export async function GET(request: NextRequest) {
 
     switch (role) {
       case Role.ADMIN:
-      case Role.TEACHER:
+      case Role.TEACHER: {
         // Get notifications created by the user
         const userNotifications = await prisma.notification.findMany({
           where: {
             creatorId: userId,
           },
           include: {
+            // target user (if notification is for a specific user)
             user: true,
+            // courseParallel with nested course and parallel names
             courseParallel: {
               include: {
                 course: true,
-                parallel: true
-              }
-            }
-          }
+                parallel: true,
+              },
+            },
+          },
+          orderBy: { date: "desc" },
         });
-        return NextResponse.json(userNotifications);
+
+        // Attach the creator user (the requesting user) to each notification so the
+        // client receives a `creator` object matching the frontend Notification interface.
+        const creatorUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { id: true, firstName: true, lastName: true },
+        });
+
+        const userNotificationsWithCreator = userNotifications.map((n) => ({
+          ...n,
+          creator: creatorUser || null,
+        }));
+
+        return NextResponse.json(userNotificationsWithCreator);
+      }
 
       case Role.TUTOR: {
         // Get notifications where:
@@ -85,7 +102,22 @@ export async function GET(request: NextRequest) {
             }
           }
         });
-        return NextResponse.json(tutorNotifications);
+
+        // Attach creator info for each notification
+        const tutorCreatorIds = Array.from(new Set(tutorNotifications.map((n) => n.creatorId)));
+        const tutorCreators = tutorCreatorIds.length
+          ? await prisma.user.findMany({
+              where: { id: { in: tutorCreatorIds } },
+              select: { id: true, firstName: true, lastName: true },
+            })
+          : [];
+        const tutorCreatorMap = new Map(tutorCreators.map((u) => [u.id, u]));
+        const tutorNotificationsWithCreator = tutorNotifications.map((n) => ({
+          ...n,
+          creator: tutorCreatorMap.get(n.creatorId) || null,
+        }));
+
+        return NextResponse.json(tutorNotificationsWithCreator);
       }
 
       case Role.STUDENT: {
@@ -128,7 +160,22 @@ export async function GET(request: NextRequest) {
             }
           }
         });
-        return NextResponse.json(studentNotifications);
+
+        // Attach creator info for each notification
+        const studentCreatorIds = Array.from(new Set(studentNotifications.map((n) => n.creatorId)));
+        const studentCreators = studentCreatorIds.length
+          ? await prisma.user.findMany({
+              where: { id: { in: studentCreatorIds } },
+              select: { id: true, firstName: true, lastName: true },
+            })
+          : [];
+        const studentCreatorMap = new Map(studentCreators.map((u) => [u.id, u]));
+        const studentNotificationsWithCreator = studentNotifications.map((n) => ({
+          ...n,
+          creator: studentCreatorMap.get(n.creatorId) || null,
+        }));
+
+        return NextResponse.json(studentNotificationsWithCreator);
       }
 
       default:
@@ -173,19 +220,19 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         message,
-        userId: targetUserId,
-        courseParallelId,
-        creatorId: userId
+        userId: targetUserId ? parseInt(String(targetUserId), 10) : null,
+        courseParallelId: courseParallelId ? parseInt(String(courseParallelId), 10) : null,
+        creatorId: userId,
       },
       include: {
         user: true,
         courseParallel: {
           include: {
             course: true,
-            parallel: true
-          }
-        }
-      }
+            parallel: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(notification);

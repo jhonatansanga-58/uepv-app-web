@@ -21,6 +21,7 @@ export async function GET() {
             name: course.name,
             active: course.active,
             parallels: course.parallels.map((p) => ({
+                courseParallelId: p.id,
                 id: p.parallel.id,
                 name: p.parallel.name,
                 active: p.active,

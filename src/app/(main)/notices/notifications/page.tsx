@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import NotificationCard from "@/components/notificationCard";
+import NotificationCard from "@/components/notices/notificationCard";
 import NotificationDisableModal from "@/components/notificationDisableModal";
-import NotificationInfoModal from "@/components/notificationInfoModal";
+import NotificationInfoModal from "@/components/notices/notificationInfoModal";
+import NotificationCreateModal from "@/components/notices/notificationCreateModal";
 
 interface User {
   id: number;
@@ -25,13 +26,10 @@ interface Notification {
   id: number;
   title: string;
   message: string;
-  userId: number | null;
-  courseParallelId: number | null;
   active: boolean;
   date: Date;
   user: User | null;
   courseParallel: CourseParallel | null;
-  creatorId: number;
   creator: User;
 }
 
@@ -40,6 +38,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [openDisableModal, setOpenDisableModal] = useState(false);
   const [openInfoModal, setOpenInfoModal] = useState(false);
+  const [openCreateModal, setOpenCreateModal] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
 
   const fetchNotifications = async () => {
@@ -53,8 +52,7 @@ export default function NotificationsPage() {
   }, []);
 
   const handleAddNewNotification = () => {
-    // This will be implemented later when we create the form
-    console.log("Add new notification");
+    setOpenCreateModal(true);
   };
 
   const handleViewInfo = (id: number) => {
@@ -87,19 +85,31 @@ export default function NotificationsPage() {
         </div>
       )}
 
+      <table className="w-full table-auto text-left text-sm text-gray-700">
+        <thead className="bg-gray-100">
+          <tr className="border-b border-gray-300">
+            <th className="px-6 py-3 w-1/2 font-semibold text-gray-800">
+              Nombre
+            </th>
+            <th className="px-6 py-3 w-1/4 font-semibold text-gray-800">Rol</th>
+            <th className="px-6 py-3 w-auto font-semibold text-gray-800">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <br />
+      
       <div className="space-y-3">
         {notifications.map((notification) => (
           <NotificationCard
             key={notification.id}
             id={notification.id}
             title={notification.title}
-            message={notification.message}
-            userId={notification.userId}
-            courseParallelId={notification.courseParallelId}
             active={notification.active}
             user={notification.user}
             courseParallel={notification.courseParallel}
-            creatorId={notification.creatorId}
             creator={notification.creator}
             onViewInfo={handleViewInfo}
             onDisable={handleDisable}
@@ -122,8 +132,6 @@ export default function NotificationsPage() {
             onClose={() => setOpenInfoModal(false)}
             title={selectedNotification.title}
             message={selectedNotification.message}
-            userId={selectedNotification.userId}
-            courseParallelId={selectedNotification.courseParallelId}
             user={selectedNotification.user}
             courseParallel={selectedNotification.courseParallel}
             creator={selectedNotification.creator}
@@ -131,6 +139,12 @@ export default function NotificationsPage() {
           />
         </>
       )}
+
+      <NotificationCreateModal
+        open={openCreateModal}
+        onClose={() => setOpenCreateModal(false)}
+        onCreated={fetchNotifications}
+      />
     </div>
   );
 }

@@ -40,6 +40,8 @@ export function NavBarComponent() {
         return "Asistencias";
       case "/attendances/history":
         return "Historial";
+      case "/notices/notifications":
+        return "Comunicados";
       default:
         return ""; // Default fallback
     }

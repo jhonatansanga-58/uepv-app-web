@@ -22,8 +22,6 @@ interface NotificationInfoModalProps {
   onClose: () => void;
   title: string;
   message: string;
-  userId: number | null;
-  courseParallelId: number | null;
   user?: User | null;
   courseParallel?: CourseParallel | null;
   creator?: User;
@@ -35,18 +33,16 @@ export default function NotificationInfoModal({
   onClose,
   title,
   message,
-  userId,
-  courseParallelId,
   user,
   courseParallel,
   creator,
   date,
 }: NotificationInfoModalProps) {
   const getDestinataryText = () => {
-    if (userId) {
+    if (user) {
       return user ? `${user.firstName} ${user.lastName}` : "Usuario no encontrado";
     }
-    if (courseParallelId) {
+    if (courseParallel) {
       return courseParallel 
         ? `${courseParallel.course.name} ${courseParallel.parallel.name}`
         : "Curso no encontrado";

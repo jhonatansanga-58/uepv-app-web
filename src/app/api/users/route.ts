@@ -33,12 +33,16 @@ export async function POST(req: Request) {
 
     // Encriptar contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    function generateRandomSuffix() {
+      // Genera un número entre 10000 y 99999 (5 cifras)
+      return Math.floor(10000 + Math.random() * 90000);
+    }
     const newUser = await prisma.user.create({
       data: {
         firstName,
         lastName,
         email,
+        userName: firstName.sbtring(0, 1).toLowerCase() + lastName.sbtring(0, 3).toLowerCase() + generateRandomSuffix(),
         password: hashedPassword,
         role,
         phone: phone || null,

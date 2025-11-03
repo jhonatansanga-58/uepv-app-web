@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import NotificationCard from "@/components/notices/notificationCard";
-import NotificationDisableModal from "@/components/notificationDisableModal";
+import NotificationDisableModal from "@/components/notices/notificationDisableModal";
 import NotificationInfoModal from "@/components/notices/notificationInfoModal";
 import NotificationCreateModal from "@/components/notices/notificationCreateModal";
 
@@ -89,9 +89,13 @@ export default function NotificationsPage() {
         <thead className="bg-gray-100">
           <tr className="border-b border-gray-300">
             <th className="px-6 py-3 w-1/2 font-semibold text-gray-800">
-              Nombre
+              Título
             </th>
-            <th className="px-6 py-3 w-1/4 font-semibold text-gray-800">Rol</th>
+            <th className="px-6 py-3 w-1/4 font-semibold text-gray-800">
+              {session?.user?.role === "ADMIN" || session?.user?.role === "TEACHER"
+                ? "Destinatario"
+                : "Remitente"}
+            </th>
             <th className="px-6 py-3 w-auto font-semibold text-gray-800">
               Acciones
             </th>
@@ -100,7 +104,7 @@ export default function NotificationsPage() {
         <tbody></tbody>
       </table>
       <br />
-      
+
       <div className="space-y-3">
         {notifications.map((notification) => (
           <NotificationCard

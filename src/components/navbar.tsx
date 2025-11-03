@@ -39,7 +39,7 @@ export function NavBarComponent() {
       case "/attendances/register":
         return "Asistencias";
       case "/attendances/history":
-        return "Historial";
+        return "Historial de asistencias";
       case "/notices/notifications":
         return "Comunicados";
       default:

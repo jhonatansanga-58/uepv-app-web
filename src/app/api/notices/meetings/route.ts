@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
             userId: userId,
           },
           include: {
+            user: true,
             student: {
               include: {
                 user: true,
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest) {
             active: true
           },
           include: {
+            user: true,
             student: {
               include: {
                 user: true,
@@ -65,7 +67,6 @@ export async function GET(request: NextRequest) {
                 }
               }
             },
-            user: true
           }
         });
         return NextResponse.json(tutorMeetings);
@@ -78,7 +79,18 @@ export async function GET(request: NextRequest) {
             active: true
           },
           include: {
-            user: true
+            user: true,
+            student: {
+              include: {
+                user: true,
+                courseParallel: {
+                  include: {
+                    course: true,
+                    parallel: true
+                  }
+                }
+              }
+            },
           }
         });
         return NextResponse.json(studentMeetings);

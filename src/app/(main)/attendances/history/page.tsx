@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { TextInput, Spinner, Button, Datepicker } from "flowbite-react";
 import AttendanceDeleteConfirmModal from "@/components/attendanceDeleteConfirmModal";
+import ReportFormatModal from "@/components/reports/reportFormatModal";
 import { useSession } from "next-auth/react";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
 
 type StudentMinimal = { id: number; label: string };
 
@@ -23,6 +26,8 @@ export default function AttendancesHistoryPage() {
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -113,8 +118,6 @@ export default function AttendancesHistoryPage() {
 
   return (
     <div className="p-6 max-w-4xl">
-      <h2 className="text-2xl font-semibold mb-4">Historial de Asistencias</h2>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         <div className="md:col-span-1">
           <label className="block text-sm text-gray-700 mb-1">Estudiante</label>
@@ -151,8 +154,17 @@ export default function AttendancesHistoryPage() {
         </div>
       </div>
 
-      <div className="mb-4">
-        <Button onClick={fetchAttendances} disabled={!studentId || !fromDate || !toDate}>Buscar</Button>
+      <div className="mb-4 flex gap-2">
+        <Button onClick={fetchAttendances} disabled={!studentId || !fromDate || !toDate}>
+          Buscar
+        </Button>
+        <Button 
+          onClick={() => setShowReportModal(true)} 
+          disabled={!attendances.length}
+          className="bg-green-500 hover:bg-green-600"
+        >
+          Generar reporte
+        </Button>
       </div>
 
       {loadingList ? (
@@ -190,6 +202,89 @@ export default function AttendancesHistoryPage() {
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
+      />
+
+      <ReportFormatModal
+        open={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onGenerate={async (format) => {
+          try {
+            setGeneratingReport(true);
+            const studentInfo = students.find(s => s.id === studentId);
+            
+            if (format === 'excel') {
+              // Create Excel workbook
+              const wb = XLSX.utils.book_new();
+              
+              // Format data for Excel
+              const wsData = [
+                ['REPORTE DE ASISTENCIAS'],
+                [],
+                ['Estudiante:', studentInfo?.label || ''],
+                ['Período:', `${new Date(fromDate).toLocaleDateString()} - ${new Date(toDate).toLocaleDateString()}`],
+                [],
+                ['Fecha y hora', 'Registrado por']
+              ];
+
+              // Add attendance records
+              attendances.forEach(a => {
+                wsData.push([
+                  new Date(a.date).toLocaleString(),
+                  a.user ? `${a.user.firstName} ${a.user.lastName}` : 'Dispositivo'
+                ]);
+              });
+
+              // Create worksheet and add to workbook
+              const ws = XLSX.utils.aoa_to_sheet(wsData);
+              XLSX.utils.book_append_sheet(wb, ws, "Asistencias");
+
+              // Generate Excel file
+              XLSX.writeFile(wb, `asistencias_${studentInfo?.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
+            } else {
+              // Create PDF
+              const doc = new jsPDF();
+              
+              // Add title
+              doc.setFontSize(16);
+              doc.text("REPORTE DE ASISTENCIAS", 105, 20, { align: "center" });
+              
+              // Add student info
+              doc.setFontSize(12);
+              doc.text(`Estudiante: ${studentInfo?.label || ''}`, 20, 40);
+              doc.text(`Período: ${new Date(fromDate).toLocaleDateString()} - ${new Date(toDate).toLocaleDateString()}`, 20, 50);
+              
+              // Add attendance records
+              doc.setFontSize(11);
+              let y = 70;
+              
+              // Table header
+              doc.text("Fecha y hora", 20, y);
+              doc.text("Registrado por", 100, y);
+              y += 10;
+              
+              // Table content
+              attendances.forEach(a => {
+                if (y > 270) { // Check if we need a new page
+                  doc.addPage();
+                  y = 20;
+                }
+                doc.text(new Date(a.date).toLocaleString(), 20, y);
+                doc.text(a.user ? `${a.user.firstName} ${a.user.lastName}` : 'Dispositivo', 100, y);
+                y += 10;
+              });
+
+              // Save PDF
+              doc.save(`asistencias_${studentInfo?.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`);
+            }
+
+            setShowReportModal(false);
+          } catch (error) {
+            console.error('Error generating report:', error);
+          } finally {
+            setGeneratingReport(false);
+          }
+        }}
+        loading={generatingReport}
       />
     </div>
   );

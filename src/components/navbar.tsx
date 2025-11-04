@@ -42,6 +42,10 @@ export function NavBarComponent() {
         return "Historial de asistencias";
       case "/notices/notifications":
         return "Comunicados";
+      case "/notices/meetings":
+        return "Citaciones";
+      case "/notices/tasks":
+        return "Tareas";
       default:
         return ""; // Default fallback
     }

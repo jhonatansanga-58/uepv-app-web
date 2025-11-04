@@ -35,7 +35,6 @@ export default function MeetingCard({
 }: MeetingProps) {
   const { data: session } = useSession();
   const userRole = session?.user?.role;
-  const currentUserId = parseInt(session?.user?.id || "0");
 
   const getDestinataryText = () => {
     if (student && student.user) {
@@ -73,23 +72,22 @@ export default function MeetingCard({
           <HiEye className="w-5 h-5" />
         </button>
 
-        {(userRole === "ADMIN" || userRole === "TEACHER") &&
-          user?.id === currentUserId && (
-            <button
-              onClick={() => onDisable(id)}
-              className={`${active
-                ? "bg-red-500 hover:bg-red-600 text-white p-2 rounded"
-                : "bg-green-500 hover:bg-green-600 text-white p-2 rounded"
-                }`}
-              title={active ? "Desactivar" : "Activar"}
-            >
-              {active ? (
-                <HiTrash className="w-5 h-5" />
-              ) : (
-                <HiCheck className="w-5 h-5" />
-              )}
-            </button>
-          )}
+        {(userRole === "ADMIN" || userRole === "TEACHER") && (
+          <button
+            onClick={() => onDisable(id)}
+            className={`${active
+              ? "bg-red-500 hover:bg-red-600 text-white p-2 rounded"
+              : "bg-green-500 hover:bg-green-600 text-white p-2 rounded"
+              }`}
+            title={active ? "Desactivar" : "Activar"}
+          >
+            {active ? (
+              <HiTrash className="w-5 h-5" />
+            ) : (
+              <HiCheck className="w-5 h-5" />
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

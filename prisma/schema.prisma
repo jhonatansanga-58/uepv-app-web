@@ -7,60 +7,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  TEACHER
-  TUTOR
-  STUDENT
-}
-
-enum Gender {
-  MALE
-  FEMALE
-  OTHER
-}
-
-enum LeaveStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model User {
-  id                  Int            @id @default(autoincrement())
+  id                  Int              @id @default(autoincrement())
   firstName           String
   lastName            String
-  userName            String         @unique
-  email               String         @unique
+  email               String           @unique
   password            String
-  role                Role           @default(STUDENT)
+  role                Role             @default(STUDENT)
   phone               String?
   address             String?
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-  active              Boolean        @default(true)
-  studentProfile      Student?       @relation("UserStudent")
-  tutorships          StudentTutor[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  active              Boolean          @default(true)
+  userName            String           @unique
   attendancesRecorded Attendance[]
-  meetingsAsTeacher   Meeting[]      @relation("TeacherMeeting")
+  LeaveRequest        LeaveRequest[]
+  meetingsAsTeacher   Meeting[]        @relation("TeacherMeeting")
   notifications       Notification[]
-
-  TeacherSubject TeacherSubject[]
-  LeaveRequest   LeaveRequest[]
+  studentProfile      Student?         @relation("UserStudent")
+  tutorships          StudentTutor[]
+  TeacherSubject      TeacherSubject[]
 }
 
 model Student {
   id               Int            @id
-  user             User           @relation("UserStudent", fields: [id], references: [id])
   birthDate        DateTime?
   gender           Gender?
   cardCode         String         @unique
   courseParallelId Int
-  courseParallel   CourseParallel @relation(fields: [courseParallelId], references: [id])
-  tutorships       StudentTutor[]
-  meetings         Meeting[]      @relation("StudentMeeting")
   attendances      Attendance[]
   leaveRequests    LeaveRequest[]
+  meetings         Meeting[]      @relation("StudentMeeting")
+  courseParallel   CourseParallel @relation(fields: [courseParallelId], references: [id])
+  user             User           @relation("UserStudent", fields: [id], references: [id])
+  tutorships       StudentTutor[]
 }
 
 model StudentTutor {
@@ -72,11 +52,10 @@ model StudentTutor {
 }
 
 model Course {
-  id        Int              @id @default(autoincrement())
-  name      String           @unique
-  active    Boolean          @default(true)
-  parallels CourseParallel[]
-
+  id            Int              @id @default(autoincrement())
+  name          String           @unique
+  active        Boolean          @default(true)
+  parallels     CourseParallel[]
   CourseSubject CourseSubject[]
 }
 
@@ -93,26 +72,26 @@ model CourseParallel {
   active        Boolean        @default(true)
   course        Course         @relation(fields: [courseId], references: [id])
   parallel      Parallel       @relation(fields: [parallelId], references: [id])
+  notifications Notification[]
   students      Student[]
   tasks         Task[]         @relation("CourseParallelTasks")
-  notifications Notification[]
 }
 
 model Subject {
   id       Int              @id @default(autoincrement())
   name     String           @unique
   active   Boolean          @default(true)
-  teachers TeacherSubject[]
   courses  CourseSubject[]
   tasks    Task[]
+  teachers TeacherSubject[]
 }
 
 model TeacherSubject {
   id        Int     @id @default(autoincrement())
   teacherId Int
   subjectId Int
-  teacher   User    @relation(fields: [teacherId], references: [id])
   subject   Subject @relation(fields: [subjectId], references: [id])
+  teacher   User    @relation(fields: [teacherId], references: [id])
 
   @@unique([teacherId, subjectId])
 }
@@ -130,8 +109,8 @@ model CourseSubject {
 model Attendance {
   id        Int      @id @default(autoincrement())
   studentId Int
-  userId    Int?
   date      DateTime @default(now())
+  userId    Int?
   student   Student  @relation(fields: [studentId], references: [id])
   user      User?    @relation(fields: [userId], references: [id])
 }
@@ -139,16 +118,16 @@ model Attendance {
 model LeaveRequest {
   id              Int         @id @default(autoincrement())
   studentId       Int
-  tutorId         Int
-  title           String
-  message         String
   reason          String
-  startDate       DateTime?
-  endDate         DateTime?
   requestDate     DateTime    @default(now())
   status          LeaveStatus @default(PENDING)
-  active          Boolean     @default(true) // para habilitar/deshabilitar
+  active          Boolean     @default(true)
+  endDate         DateTime?
+  message         String
   rejectionReason String?
+  startDate       DateTime?
+  title           String
+  tutorId         Int
   updatedAt       DateTime    @updatedAt
   student         Student     @relation(fields: [studentId], references: [id])
   tutor           User        @relation(fields: [tutorId], references: [id])
@@ -156,12 +135,12 @@ model LeaveRequest {
 
 model Task {
   id               Int            @id @default(autoincrement())
-  subjectId        Int
-  courseParallelId Int
   title            String
   description      String
   sendDate         DateTime       @default(now())
   dueDate          DateTime
+  courseParallelId Int
+  subjectId        Int
   active           Boolean        @default(true)
   courseParallel   CourseParallel @relation("CourseParallelTasks", fields: [courseParallelId], references: [id])
   subject          Subject        @relation(fields: [subjectId], references: [id])
@@ -169,25 +148,44 @@ model Task {
 
 model Meeting {
   id        Int      @id @default(autoincrement())
-  userId    Int
   studentId Int
-  topic     String
   message   String
   date      DateTime @default(now())
+  topic     String
   active    Boolean  @default(true)
-  user      User     @relation("TeacherMeeting", fields: [userId], references: [id])
+  userId    Int
   student   Student  @relation("StudentMeeting", fields: [studentId], references: [id])
+  user      User     @relation("TeacherMeeting", fields: [userId], references: [id])
 }
 
 model Notification {
   id               Int             @id @default(autoincrement())
+  userId           Int?
   title            String
   message          String
   date             DateTime        @default(now())
-  userId           Int?
   courseParallelId Int?
   active           Boolean         @default(true)
   creatorId        Int
-  user             User?           @relation(fields: [userId], references: [id])
   courseParallel   CourseParallel? @relation(fields: [courseParallelId], references: [id])
+  user             User?           @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  TUTOR
+  STUDENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

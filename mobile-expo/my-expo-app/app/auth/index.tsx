@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
 import {
   View,
   Text,
@@ -8,6 +9,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AuthService } from '../../services/auth';
@@ -18,6 +20,20 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const isAuth = await AuthService.isAuthenticated();
+        if (isAuth) {
+          router.replace('/home');
+        }
+      } catch {
+        // ignore
+      }
+    };
+    check();
+  }, [router]);
+
   const handleLogin = async () => {
     if (!usernameOrEmail || !password) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -26,10 +42,12 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      await AuthService.login(usernameOrEmail, password);
+      console.log('Attempting login', { usernameOrEmail });
+      const resp = await AuthService.login(usernameOrEmail, password);
+      console.log('Login successful', resp);
       router.replace('/home');
     } catch (error) {
-      Alert.alert(
+      console.log(
         'Login Failed',
         error instanceof Error ? error.message : 'Please check your credentials'
       );
@@ -44,23 +62,22 @@ export default function LoginScreen() {
       className="flex-1 bg-white"
     >
       <View className="flex-1 justify-center p-6 space-y-6">
-        {/* Logo or Header */}
         <View className="items-center mb-8">
-          <Text className="text-2xl font-bold text-gray-900">Welcome Back</Text>
-          <Text className="text-base text-gray-600 mt-2">
-            Sign in to your account
-          </Text>
+          <Image
+            source={require('../../assets/escudo.png')}
+            className= {Platform.OS === 'web' ? 'max-w-36 max-h-36 mb-4' : 'w-40 h-40 mb-4'}
+            resizeMode="contain"
+          />
         </View>
 
-        {/* Login Form */}
         <View className="space-y-4">
           <View>
             <Text className="text-sm font-medium text-gray-700 mb-1">
-              Username or Email
+              Usuario o correo
             </Text>
             <TextInput
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500"
-              placeholder="Enter your username or email"
+              placeholder="Ingresa tu nombre de usuario o correo"
               value={usernameOrEmail}
               onChangeText={setUsernameOrEmail}
               autoCapitalize="none"
@@ -69,12 +86,12 @@ export default function LoginScreen() {
           </View>
 
           <View>
-            <Text className="text-sm font-medium text-gray-700 mb-1">
-              Password
+            <Text className="text-sm font-medium text-gray-700 mb-1 my-3">
+              Contraseña
             </Text>
             <TextInput
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500"
-              placeholder="Enter your password"
+              className="w-full px-3 py-3 rounded-lg border border-gray-300 focus:border-blue-500"
+              placeholder="Ingresa tu contraseña"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -84,14 +101,13 @@ export default function LoginScreen() {
           <TouchableOpacity
             onPress={handleLogin}
             disabled={isLoading}
-            className={`w-full py-3 rounded-lg bg-blue-600 ${isLoading ? 'opacity-70' : 'active:bg-blue-700'
-              }`}
+            className={`w-full my-4 py-3 rounded-lg bg-primary-500 ${isLoading ? 'opacity-70' : ''}`}
           >
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
               <Text className="text-white text-center font-semibold text-base">
-                Sign In
+                iniciar sesión
               </Text>
             )}
           </TouchableOpacity>

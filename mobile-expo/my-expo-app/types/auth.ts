@@ -3,12 +3,13 @@ export interface LoginCredentials {
   password: string;
 }
 
+// API returns at minimum id, name and role. Other fields are optional.
 export interface User {
-  id: string;
+  id: number;
   name: string;
-  email: string;
-  userName: string;
   role: string;
+  email?: string;
+  userName?: string;
 }
 
 export interface LoginResponse {

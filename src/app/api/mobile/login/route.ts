@@ -80,13 +80,17 @@ export async function POST(req: Request) {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET!,
-      { expiresIn: '8h' }
+      { expiresIn: '24h' }
     );
 
     return new NextResponse(
       JSON.stringify({
         token,
-        user: { id: user.id, name: user.firstName, role: user.role },
+        user: {
+          id: user.id,
+          name: user.firstName + ' ' + user.lastName,
+          role: user.role
+        },
       }),
       {
         status: 200,

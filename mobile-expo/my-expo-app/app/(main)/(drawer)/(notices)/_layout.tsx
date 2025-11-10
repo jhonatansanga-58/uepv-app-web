@@ -25,12 +25,14 @@ const Layout = () => {
             <Ionicons name="megaphone-outline" color={color} size={size} />
         }}
       />
-      <Tabs.Screen name="tareas" options={{
-        title: 'Tareas',
-        headerShown: false,
-        tabBarIcon: ({ color, size }) =>
-          <Ionicons name="book-outline" color={color} size={size} />
-      }}
+      <Tabs.Screen
+        name="tareas"
+        options={{
+          title: 'Tareas',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) =>
+            <Ionicons name="book-outline" color={color} size={size} />
+        }}
       />
       <Tabs.Screen name="citaciones" options={{
         title: 'Citaciones',

@@ -13,7 +13,7 @@ export default function MeetingsScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-  const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/mobile/notices/meetings`, {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/mobile/notices/meetings`, {
         headers: {
           'Authorization': `Bearer ${await AuthService.getToken()}`,
           'Content-Type': 'application/json',
@@ -76,9 +76,9 @@ export default function MeetingsScreen() {
                 <View className="flex-row items-center justify-between mt-2">
                   <View className="flex-row items-center space-x-2">
                     <View className="bg-primary-100 px-2 py-1 rounded">
-                      <Text className="text-xs text-primary-700">{m.student?.courseParallel?.course?.name ?? ''}</Text>
+                      <Text className="text-xs text-primary-700">{m.student?.courseParallel?.course?.name ?? ''} {m.student?.courseParallel?.parallel?.name ? `${m.student.courseParallel.parallel.name}` : ''}</Text>
                     </View>
-                    <Text className="text-sm text-gray-600">{m.student?.courseParallel?.parallel?.name ? `- ${m.student.courseParallel.parallel.name}` : ''} {m.student?.user ? ` • ${m.student.user.firstName} ${m.student.user.lastName}` : ''}</Text>
+                    <Text className="text-sm text-gray-600"> {m.student?.user ? `${m.student.user.firstName} ${m.student.user.lastName}` : ''}</Text>
                   </View>
                   <Text className="text-xs text-gray-400">Por: {m.user?.firstName} {m.user?.lastName}</Text>
                 </View>

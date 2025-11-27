@@ -25,7 +25,7 @@ export default function LoginScreen() {
       try {
         const isAuth = await AuthService.isAuthenticated();
         if (isAuth) {
-          router.replace('(main)');
+          router.replace('/(main)/(drawer)/(notices)/comunicados');
         }
       } catch {
         // ignore
@@ -45,7 +45,7 @@ export default function LoginScreen() {
       console.log('Attempting login', { usernameOrEmail });
       const resp = await AuthService.login(usernameOrEmail, password);
       console.log('Login successful', resp);
-      router.replace('/(main)/(drawer)/(notices)');
+      router.replace('/(main)/(drawer)/(notices)/comunicados');
     } catch (error) {
       console.log(
         'Login Failed',

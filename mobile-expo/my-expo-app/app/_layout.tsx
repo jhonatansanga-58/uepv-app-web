@@ -17,7 +17,7 @@ function useProtectedRoute() {
       if (!isAuth && !inAuthGroup) {
         router.replace('/auth');
       } else if (isAuth && (inAuthGroup || isRoot)) {
-        router.replace('/(main)/(drawer)/attendances');
+        router.replace('/(main)/(drawer)/(notices)/comunicados');
       }
     };
 

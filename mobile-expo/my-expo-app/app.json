@@ -28,9 +28,17 @@
       "supportsTablet": true
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.jhonatan58.uepvapp"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9f3ea326-ab0b-4551-81d5-a3672ee522e8"
       }
     }
   }

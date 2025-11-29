@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AuthService } from '../../services/auth';
+//import { registerAndSavePushToken } from '../../services/notifications';
 
 export default function LoginScreen() {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
@@ -45,6 +46,12 @@ export default function LoginScreen() {
       console.log('Attempting login', { usernameOrEmail });
       const resp = await AuthService.login(usernameOrEmail, password);
       console.log('Login successful', resp);
+      // register and save push token after successful login (non-blocking)
+      /*try {
+        await registerAndSavePushToken();
+      } catch (err) {
+        console.warn('Failed to register push token after login', err);
+      }*/
       router.replace('/(main)/(drawer)/(notices)/comunicados');
     } catch (error) {
       console.log(

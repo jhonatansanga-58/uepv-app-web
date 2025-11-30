@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { AuthService } from '../../services/auth';
-//import { registerAndSavePushToken } from '../../services/notifications';
+import messaging from '@react-native-firebase/messaging';
 
 export default function LoginScreen() {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
@@ -46,12 +46,39 @@ export default function LoginScreen() {
       console.log('Attempting login', { usernameOrEmail });
       const resp = await AuthService.login(usernameOrEmail, password);
       console.log('Login successful', resp);
-      // register and save push token after successful login (non-blocking)
-      /*try {
-        await registerAndSavePushToken();
+      
+      // Get Firebase token and send to backend
+      try {
+        const firebaseToken = await messaging().getToken();
+        console.log('Firebase token:', firebaseToken);
+        
+        const token = await AuthService.getToken();
+        const user = await AuthService.getCurrentUser();
+        
+        if (user?.id && firebaseToken) {
+          const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/mobile/firebase-token`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.id,
+              firebaseToken,
+            }),
+          });
+          
+          if (!res.ok) {
+            console.warn('Failed to save Firebase token to backend', await res.text());
+          } else {
+            console.log('Firebase token saved to backend successfully');
+          }
+        }
       } catch (err) {
-        console.warn('Failed to register push token after login', err);
-      }*/
+        console.warn('Error getting or saving Firebase token', err);
+      }
+      
       router.replace('/(main)/(drawer)/(notices)/comunicados');
     } catch (error) {
       console.log(

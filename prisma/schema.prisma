@@ -20,6 +20,7 @@ model User {
   updatedAt           DateTime         @updatedAt
   active              Boolean          @default(true)
   userName            String           @unique
+  firebaseToken       String?
   attendancesRecorded Attendance[]
   LeaveRequest        LeaveRequest[]
   meetingsAsTeacher   Meeting[]        @relation("TeacherMeeting")

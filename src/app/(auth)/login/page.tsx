@@ -33,6 +33,7 @@ export default function LoginPage() {
         router.replace(callbackUrl);
       } else {
         // Show error
+        console.error('Login error:', result.error);
         setError('Invalid credentials. Please try again.');
       }
     } catch {

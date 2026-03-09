@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  Int              @id @default(autoincrement())
+  firstName           String
+  lastName            String
+  email               String           @unique
+  password            String
+  role                Role             @default(STUDENT)
+  phone               String?
+  address             String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  active              Boolean          @default(true)
+  userName            String           @unique
+  firebaseToken       String?
+  attendancesRecorded Attendance[]
+  LeaveRequest        LeaveRequest[]
+  meetingsAsTeacher   Meeting[]        @relation("TeacherMeeting")
+  notifications       Notification[]
+  studentProfile      Student?         @relation("UserStudent")
+  tutorships          StudentTutor[]
+  TeacherSubject      TeacherSubject[]
+}
+
+model Student {
+  id               Int            @id
+  birthDate        DateTime?
+  gender           Gender?
+  cardCode         String         @unique
+  courseParallelId Int
+  attendances      Attendance[]
+  leaveRequests    LeaveRequest[]
+  meetings         Meeting[]      @relation("StudentMeeting")
+  courseParallel   CourseParallel @relation(fields: [courseParallelId], references: [id])
+  user             User           @relation("UserStudent", fields: [id], references: [id])
+  tutorships       StudentTutor[]
+}
+
+model StudentTutor {
+  id        Int     @id @default(autoincrement())
+  studentId Int
+  tutorId   Int
+  student   Student @relation(fields: [studentId], references: [id])
+  tutor     User    @relation(fields: [tutorId], references: [id])
+}
+
+model Course {
+  id            Int              @id @default(autoincrement())
+  name          String           @unique
+  active        Boolean          @default(true)
+  parallels     CourseParallel[]
+  CourseSubject CourseSubject[]
+}
+
+model Parallel {
+  id      Int              @id @default(autoincrement())
+  name    String           @unique
+  courses CourseParallel[]
+}
+
+model CourseParallel {
+  id            Int            @id @default(autoincrement())
+  courseId      Int
+  parallelId    Int
+  active        Boolean        @default(true)
+  course        Course         @relation(fields: [courseId], references: [id])
+  parallel      Parallel       @relation(fields: [parallelId], references: [id])
+  notifications Notification[]
+  students      Student[]
+  tasks         Task[]         @relation("CourseParallelTasks")
+}
+
+model Subject {
+  id       Int              @id @default(autoincrement())
+  name     String           @unique
+  active   Boolean          @default(true)
+  courses  CourseSubject[]
+  tasks    Task[]
+  teachers TeacherSubject[]
+}
+
+model TeacherSubject {
+  id        Int     @id @default(autoincrement())
+  teacherId Int
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  teacher   User    @relation(fields: [teacherId], references: [id])
+
+  @@unique([teacherId, subjectId])
+}
+
+model CourseSubject {
+  id        Int     @id @default(autoincrement())
+  courseId  Int
+  subjectId Int
+  course    Course  @relation(fields: [courseId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([courseId, subjectId])
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  date      DateTime @default(now())
+  userId    Int?
+  student   Student  @relation(fields: [studentId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model LeaveRequest {
+  id              Int         @id @default(autoincrement())
+  studentId       Int
+  reason          String
+  requestDate     DateTime    @default(now())
+  status          LeaveStatus @default(PENDING)
+  active          Boolean     @default(true)
+  endDate         DateTime?
+  message         String
+  rejectionReason String?
+  startDate       DateTime?
+  title           String
+  tutorId         Int
+  updatedAt       DateTime    @updatedAt
+  student         Student     @relation(fields: [studentId], references: [id])
+  tutor           User        @relation(fields: [tutorId], references: [id])
+}
+
+model Task {
+  id               Int            @id @default(autoincrement())
+  title            String
+  description      String
+  sendDate         DateTime       @default(now())
+  dueDate          DateTime
+  courseParallelId Int
+  subjectId        Int
+  active           Boolean        @default(true)
+  courseParallel   CourseParallel @relation("CourseParallelTasks", fields: [courseParallelId], references: [id])
+  subject          Subject        @relation(fields: [subjectId], references: [id])
+}
+
+model Meeting {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  message   String
+  date      DateTime @default(now())
+  topic     String
+  active    Boolean  @default(true)
+  userId    Int
+  student   Student  @relation("StudentMeeting", fields: [studentId], references: [id])
+  user      User     @relation("TeacherMeeting", fields: [userId], references: [id])
+}
+
+model Notification {
+  id               Int             @id @default(autoincrement())
+  userId           Int?
+  title            String
+  message          String
+  date             DateTime        @default(now())
+  courseParallelId Int?
+  active           Boolean         @default(true)
+  creatorId        Int
+  courseParallel   CourseParallel? @relation(fields: [courseParallelId], references: [id])
+  user             User?           @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  TUTOR
+  STUDENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

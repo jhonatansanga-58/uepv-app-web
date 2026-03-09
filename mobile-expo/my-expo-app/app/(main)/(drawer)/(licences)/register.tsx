@@ -14,6 +14,71 @@ interface Student {
   parallel: string;
 }
 
+interface ValidationErrors {
+  student?: string;
+  title?: string;
+  message?: string;
+  reason?: string;
+  dates?: string;
+}
+
+const TITLE_MIN_LENGTH = 5;
+const TITLE_MAX_LENGTH = 100;
+const MESSAGE_MIN_LENGTH = 10;
+const MESSAGE_MAX_LENGTH = 1000;
+const REASON_MIN_LENGTH = 5;
+const REASON_MAX_LENGTH = 500;
+
+const validateForm = (
+  studentId: number | null,
+  title: string,
+  message: string,
+  reason: string,
+  startDate: Date,
+  endDate: Date
+): ValidationErrors => {
+  const errors: ValidationErrors = {};
+
+  if (!studentId) {
+    errors.student = "Seleccione un estudiante";
+  }
+
+  const trimmedTitle = title.trim();
+  if (!trimmedTitle) {
+    errors.title = "El título es obligatorio";
+  } else if (trimmedTitle.length < TITLE_MIN_LENGTH) {
+    errors.title = `El título debe tener al menos ${TITLE_MIN_LENGTH} caracteres`;
+  } else if (trimmedTitle.length > TITLE_MAX_LENGTH) {
+    errors.title = `El título no puede exceder ${TITLE_MAX_LENGTH} caracteres`;
+  }
+
+  const trimmedMessage = message.trim();
+  if (!trimmedMessage) {
+    errors.message = "El mensaje es obligatorio";
+  } else if (trimmedMessage.length < MESSAGE_MIN_LENGTH) {
+    errors.message = `El mensaje debe tener al menos ${MESSAGE_MIN_LENGTH} caracteres`;
+  } else if (trimmedMessage.length > MESSAGE_MAX_LENGTH) {
+    errors.message = `El mensaje no puede exceder ${MESSAGE_MAX_LENGTH} caracteres`;
+  }
+
+  const trimmedReason = reason.trim();
+  if (!trimmedReason) {
+    errors.reason = "El motivo es obligatorio";
+  } else if (trimmedReason.length < REASON_MIN_LENGTH) {
+    errors.reason = `El motivo debe tener al menos ${REASON_MIN_LENGTH} caracteres`;
+  } else if (trimmedReason.length > REASON_MAX_LENGTH) {
+    errors.reason = `El motivo no puede exceder ${REASON_MAX_LENGTH} caracteres`;
+  }
+
+  // Allow same-day leaves (periods of one day). Only invalidate when
+  // the end date is earlier than the start date.
+  if (startDate.getTime() > endDate.getTime()) {
+    errors.dates = "La fecha de fin no puede ser anterior a la fecha de inicio";
+  }
+
+  return errors;
+};
+
 const Register = () => {
   const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
@@ -30,6 +95,7 @@ const Register = () => {
   const [error, setError] = useState("");
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
     (async () => {
@@ -68,8 +134,12 @@ const Register = () => {
 
   const handleSubmit = async () => {
     setError("");
-    if (!studentId || !title.trim() || !message.trim() || !reason.trim()) {
-      setError("Todos los campos son obligatorios");
+    setValidationErrors({});
+
+    // Validate form
+    const errors = validateForm(studentId, title, message, reason, startDate, endDate);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
       return;
     }
 
@@ -87,9 +157,9 @@ const Register = () => {
           },
           body: JSON.stringify({
             studentId,
-            title,
-            message,
-            reason,
+            title: title.trim(),
+            message: message.trim(),
+            reason: reason.trim(),
             startDate: startDate.toISOString().split("T")[0],
             endDate: endDate.toISOString().split("T")[0],
           }),
@@ -107,12 +177,14 @@ const Register = () => {
       setSelectedStudent(null);
       setStartDate(new Date());
       setEndDate(new Date());
+      Alert.alert("Éxito", "Licencia registrada correctamente");
       // Navigate back to list
       router.replace("(drawer)/(licences)/licencias");
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Error desconocido";
       setError(errorMsg);
       Alert.alert("Error", errorMsg);
+      console.error("Failed to register leave", err);
     } finally {
       setIsLoading(false);
     }
@@ -143,9 +215,11 @@ const Register = () => {
 
         {/* Student Selection */}
         <View>
-          <Text className="text-sm font-medium text-gray-700 mb-2">Estudiante</Text>
+          <Text className="text-sm font-medium text-gray-700 mb-2">Estudiante *</Text>
           <TouchableOpacity
-            className="bg-white border border-gray-300 rounded-lg p-3 flex-row justify-between items-center"
+            className={`bg-white border rounded-lg p-3 flex-row justify-between items-center ${
+              validationErrors.student ? "border-red-300" : "border-gray-300"
+            }`}
             onPress={() => setShowStudentDropdown(!showStudentDropdown)}
           >
             <Text className={selectedStudent ? "text-gray-900" : "text-gray-500"}>
@@ -159,6 +233,9 @@ const Register = () => {
               color={colors.gray[500]}
             />
           </TouchableOpacity>
+          {validationErrors.student && (
+            <Text className="text-red-500 text-xs mt-1">{validationErrors.student}</Text>
+          )}
           {showStudentDropdown && (
             <View className="bg-white border border-gray-300 border-t-0 rounded-b-lg max-h-64">
               {students.map((student) => (
@@ -178,93 +255,141 @@ const Register = () => {
 
         {/* Title */}
         <View>
-          <Text className="text-sm font-medium text-gray-700 mb-2">Título</Text>
+          <View className="flex-row justify-between items-center mb-2">
+            <Text className="text-sm font-medium text-gray-700">Título *</Text>
+            <Text className="text-xs text-gray-500">
+              {title.length}/{TITLE_MAX_LENGTH}
+            </Text>
+          </View>
           <TextInput
-            className="bg-white border border-gray-300 rounded-lg p-3 text-gray-900"
-            placeholder="Ingrese el título"
+            className={`bg-white border rounded-lg p-3 text-gray-900 ${
+              validationErrors.title ? "border-red-300" : "border-gray-300"
+            }`}
+            placeholder="Mín. 5 caracteres"
             value={title}
             onChangeText={setTitle}
             editable={!isLoading}
+            maxLength={TITLE_MAX_LENGTH}
           />
+          {validationErrors.title && (
+            <Text className="text-red-500 text-xs mt-1">{validationErrors.title}</Text>
+          )}
         </View>
 
         {/* Message */}
         <View>
-          <Text className="text-sm font-medium text-gray-700 mb-2">Mensaje</Text>
+          <View className="flex-row justify-between items-center mb-2">
+            <Text className="text-sm font-medium text-gray-700">Mensaje *</Text>
+            <Text className="text-xs text-gray-500">
+              {message.length}/{MESSAGE_MAX_LENGTH}
+            </Text>
+          </View>
           <TextInput
-            className="bg-white border border-gray-300 rounded-lg p-3 text-gray-900"
-            placeholder="Ingrese el mensaje"
+            className={`bg-white border rounded-lg p-3 text-gray-900 ${
+              validationErrors.message ? "border-red-300" : "border-gray-300"
+            }`}
+            placeholder="Mín. 10 caracteres"
             value={message}
             onChangeText={setMessage}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
             editable={!isLoading}
+            maxLength={MESSAGE_MAX_LENGTH}
           />
+          {validationErrors.message && (
+            <Text className="text-red-500 text-xs mt-1">{validationErrors.message}</Text>
+          )}
         </View>
 
         {/* Reason */}
         <View>
-          <Text className="text-sm font-medium text-gray-700 mb-2">Motivo</Text>
+          <View className="flex-row justify-between items-center mb-2">
+            <Text className="text-sm font-medium text-gray-700">Motivo *</Text>
+            <Text className="text-xs text-gray-500">
+              {reason.length}/{REASON_MAX_LENGTH}
+            </Text>
+          </View>
           <TextInput
-            className="bg-white border border-gray-300 rounded-lg p-3 text-gray-900"
-            placeholder="Ingrese el motivo"
+            className={`bg-white border rounded-lg p-3 text-gray-900 ${
+              validationErrors.reason ? "border-red-300" : "border-gray-300"
+            }`}
+            placeholder="Mín. 5 caracteres"
             value={reason}
             onChangeText={setReason}
             multiline
             numberOfLines={3}
             textAlignVertical="top"
             editable={!isLoading}
+            maxLength={REASON_MAX_LENGTH}
           />
-        </View>
-
-        {/* Start Date */}
-        <View>
-          <Text className="text-sm font-medium text-gray-700 mb-2">Fecha de inicio</Text>
-          <TouchableOpacity
-            className="bg-white border border-gray-300 rounded-lg p-3 flex-row items-center justify-between"
-            onPress={() => setShowStartPicker(true)}
-            disabled={isLoading}
-          >
-            <Text className="text-gray-900">{startDate.toLocaleDateString()}</Text>
-            <Ionicons name="calendar-outline" size={20} color={colors.gray[500]} />
-          </TouchableOpacity>
-          {showStartPicker && (
-            <DateTimePicker
-              value={startDate}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                setShowStartPicker(false);
-                if (date) setStartDate(date);
-              }}
-              minimumDate={new Date()}
-            />
+          {validationErrors.reason && (
+            <Text className="text-red-500 text-xs mt-1">{validationErrors.reason}</Text>
           )}
         </View>
 
-        {/* End Date */}
+        {/* Dates Section */}
         <View>
-          <Text className="text-sm font-medium text-gray-700 mb-2">Fecha de fin</Text>
-          <TouchableOpacity
-            className="bg-white border border-gray-300 rounded-lg p-3 flex-row items-center justify-between"
-            onPress={() => setShowEndPicker(true)}
-            disabled={isLoading}
-          >
-            <Text className="text-gray-900">{endDate.toLocaleDateString()}</Text>
-            <Ionicons name="calendar-outline" size={20} color={colors.gray[500]} />
-          </TouchableOpacity>
-          {showEndPicker && (
-            <DateTimePicker
-              value={endDate}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                setShowEndPicker(false);
-                if (date) setEndDate(date);
-              }}
-              minimumDate={startDate}
-            />
+          <Text className="text-sm font-medium text-gray-700 mb-3">Fechas *</Text>
+          <View className="flex-row gap-3">
+            {/* Start Date */}
+            <View className="flex-1">
+              <Text className="text-xs text-gray-600 mb-1">Inicio</Text>
+              <TouchableOpacity
+                className="bg-white border border-gray-300 rounded-lg p-3 flex-row items-center justify-between"
+                onPress={() => setShowStartPicker(true)}
+                disabled={isLoading}
+              >
+                <Text className="text-gray-900">{startDate.toLocaleDateString()}</Text>
+                <Ionicons name="calendar-outline" size={20} color={colors.gray[500]} />
+              </TouchableOpacity>
+              {showStartPicker && (
+                <DateTimePicker
+                  value={startDate}
+                  mode="date"
+                  display="default"
+                  onChange={(event, date) => {
+                    setShowStartPicker(false);
+                    if (date) {
+                      setStartDate(date);
+                      setValidationErrors(prev => ({ ...prev, dates: "" }));
+                    }
+                  }}
+                  minimumDate={new Date()}
+                />
+              )}
+            </View>
+
+            {/* End Date */}
+            <View className="flex-1">
+              <Text className="text-xs text-gray-600 mb-1">Fin</Text>
+              <TouchableOpacity
+                className="bg-white border border-gray-300 rounded-lg p-3 flex-row items-center justify-between"
+                onPress={() => setShowEndPicker(true)}
+                disabled={isLoading}
+              >
+                <Text className="text-gray-900">{endDate.toLocaleDateString()}</Text>
+                <Ionicons name="calendar-outline" size={20} color={colors.gray[500]} />
+              </TouchableOpacity>
+              {showEndPicker && (
+                <DateTimePicker
+                  value={endDate}
+                  mode="date"
+                  display="default"
+                  onChange={(event, date) => {
+                    setShowEndPicker(false);
+                    if (date) {
+                      setEndDate(date);
+                      setValidationErrors(prev => ({ ...prev, dates: "" }));
+                    }
+                  }}
+                  minimumDate={startDate}
+                />
+              )}
+            </View>
+          </View>
+          {validationErrors.dates && (
+            <Text className="text-red-500 text-xs mt-1">{validationErrors.dates}</Text>
           )}
         </View>
 
@@ -287,3 +412,8 @@ const Register = () => {
   );
 };
 export default Register;
+
+
+
+MONDONGOOOOOOOOOOOOOOOOOOOO
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

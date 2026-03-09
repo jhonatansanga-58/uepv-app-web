@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { AuthService } from '../services/auth';
+import messaging from '@react-native-firebase/messaging';
 
 function useProtectedRoute() {
   const segments = useSegments();
@@ -15,7 +16,7 @@ function useProtectedRoute() {
       const isRoot = pathname === '/';
 
       if (!isAuth && !inAuthGroup) {
-        router.replace('/auth');
+        router.replace('auth');
       } else if (isAuth && (inAuthGroup || isRoot)) {
         router.replace('/(main)/(drawer)/(notices)/comunicados');
       }
@@ -24,9 +25,40 @@ function useProtectedRoute() {
     checkAuth();
   }, [segments, pathname, router]);
 }
-
 export default function RootLayout() {
   useProtectedRoute();
+
+  useEffect(() => {
+    // When app is opened from quit
+    messaging()
+      .getInitialNotification()
+      .then(remoteMessage => {
+        if (remoteMessage) {
+          console.log('Initial notification caused app from quit state:',
+            remoteMessage.notification
+          );
+        }
+      });
+
+    // When app is opened from background
+    messaging().onNotificationOpenedApp((remoteMessage) => {
+      console.log('Notification caused app to open from background state:',
+        remoteMessage.notification
+      );
+    });
+
+    // Background handler
+    messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+      console.log('Message handled in the background!', remoteMessage);
+    });
+
+    // Foreground messages
+    const unsubscribe = messaging().onMessage(async (remoteMessage) => {
+      console.log('Foreground message received:', JSON.stringify(remoteMessage));
+    });
+
+    return unsubscribe;
+  }, []);
 
   return (
     <Stack screenOptions={{ headerShown: false }} />

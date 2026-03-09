@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import messaging from '@react-native-firebase/messaging';
 import { LoginResponse, User } from '../types/auth';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -80,8 +81,44 @@ export const AuthService = {
   },
 
   async logout(): Promise<void> {
-    await secureDeleteItem(TOKEN_KEY);
-    await secureDeleteItem(USER_KEY);
+    try {
+      // Delete Firebase token from device
+      try {
+        await messaging().deleteToken();
+        console.log('Firebase token deleted from device');
+      } catch (err) {
+        console.warn('Failed to delete Firebase token from device', err);
+      }
+
+      // Send empty token to backend to clear Firebase token
+      const token = await secureGetItem(TOKEN_KEY);
+      const userData = await secureGetItem(USER_KEY);
+      const user = userData ? (JSON.parse(userData) as User) : null;
+      
+      if (token && user?.id) {
+        try {
+          await fetch(`${API_URL}/mobile/firebase-token`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.id,
+              firebaseToken: '',
+            }),
+          });
+        } catch (err) {
+          console.warn('Failed to clear Firebase token on backend', err);
+        }
+      }
+    } catch (err) {
+      console.warn('Error during logout cleanup', err);
+    } finally {
+      // Always clear local storage even if backend call fails
+      await secureDeleteItem(TOKEN_KEY);
+      await secureDeleteItem(USER_KEY);
+    }
   },
 
   async getToken(): Promise<string | null> {

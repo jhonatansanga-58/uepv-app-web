@@ -31,17 +31,17 @@ model User {
 }
 
 model Student {
-  id               Int            @id
-  birthDate        DateTime?
-  gender           Gender?
-  cardCode         String         @unique
-  courseParallelId Int
-  attendances      Attendance[]
-  leaveRequests    LeaveRequest[]
-  meetings         Meeting[]      @relation("StudentMeeting")
-  courseParallel   CourseParallel @relation(fields: [courseParallelId], references: [id])
-  user             User           @relation("UserStudent", fields: [id], references: [id])
-  tutorships       StudentTutor[]
+  id          Int       @id
+  birthDate   DateTime?
+  gender      Gender?
+  fingerprint String?   @db.Text
+
+  enrollments   Enrollment[]
+  attendances   Attendance[]
+  leaveRequests LeaveRequest[]
+  meetings      Meeting[]      @relation("StudentMeeting")
+  user          User           @relation("UserStudent", fields: [id], references: [id])
+  tutorships    StudentTutor[]
 }
 
 model StudentTutor {
@@ -74,7 +74,7 @@ model CourseParallel {
   course        Course         @relation(fields: [courseId], references: [id])
   parallel      Parallel       @relation(fields: [parallelId], references: [id])
   notifications Notification[]
-  students      Student[]
+  enrollments   Enrollment[]
   tasks         Task[]         @relation("CourseParallelTasks")
 }
 
@@ -170,6 +170,30 @@ model Notification {
   creatorId        Int
   courseParallel   CourseParallel? @relation(fields: [courseParallelId], references: [id])
   user             User?           @relation(fields: [userId], references: [id])
+}
+
+model AcademicYear {
+  id          Int          @id @default(autoincrement())
+  year        Int          @unique
+  active      Boolean      @default(false)
+  startDate   DateTime?
+  endDate     DateTime?
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id               Int      @id @default(autoincrement())
+  studentId        Int
+  courseParallelId Int
+  academicYearId   Int
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  student        Student        @relation(fields: [studentId], references: [id])
+  courseParallel CourseParallel @relation(fields: [courseParallelId], references: [id])
+  academicYear   AcademicYear   @relation(fields: [academicYearId], references: [id])
+
+  @@unique([studentId, academicYearId])
 }
 
 enum Role {

@@ -34,7 +34,6 @@ interface FormData {
   address: string;
   birthDate: string;
   gender: string;
-  cardCode: string;
   courseId: string;
   parallelId: string;
   tutorId: string;
@@ -50,7 +49,6 @@ export default function CreateStudentForm() {
     address: "",
     birthDate: "",
     gender: "",
-    cardCode: "",
     courseId: "",
     parallelId: "",
     tutorId: "",
@@ -110,7 +108,6 @@ export default function CreateStudentForm() {
         address: "",
         birthDate: "",
         gender: "",
-        cardCode: "",
         courseId: "",
         parallelId: "",
         tutorId: "",
@@ -199,15 +196,7 @@ export default function CreateStudentForm() {
             <option value="OTHER">Otro</option>
           </Select>
         </div>
-        <div>
-          <Label>Código de tarjeta</Label>
-          <TextInput
-            name="cardCode"
-            value={formData.cardCode}
-            onChange={handleChange}
-            required
-          />
-        </div>
+
         <div>
           <Label>Curso</Label>
           <Select

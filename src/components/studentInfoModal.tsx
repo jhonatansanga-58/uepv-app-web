@@ -11,7 +11,6 @@ type StudentDetail = {
   id: number;
   birthDate?: string | Date | null;
   gender?: string | null;
-  cardCode: string;
   user: {
     firstName: string;
     lastName: string;
@@ -19,10 +18,12 @@ type StudentDetail = {
     phone?: string | null;
     address?: string | null;
   };
-  courseParallel: {
-    course: { name: string };
-    parallel: { name: string };
-  };
+  enrollments: Array<{
+    courseParallel: {
+      course: { name: string };
+      parallel: { name: string };
+    };
+  }>;
   tutorships: Array<{
     id: number;
     tutor: {
@@ -74,9 +75,6 @@ export default function StudentInfoModal({ id, open, onClose }: Props) {
                   {student.user.lastName}
                 </p>
                 <p>
-                  <strong>Código de Tarjeta:</strong> {student.cardCode}
-                </p>
-                <p>
                   <strong>Fecha de Nacimiento:</strong>{" "}
                   {student.birthDate
                     ? new Date(student.birthDate).toLocaleString("es-BO", {
@@ -113,11 +111,11 @@ export default function StudentInfoModal({ id, open, onClose }: Props) {
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <p>
-                  <strong>Curso:</strong> {student.courseParallel.course.name}
+                  <strong>Curso:</strong> {student.enrollments?.[0]?.courseParallel.course.name || "No Asignado"}
                 </p>
                 <p>
                   <strong>Paralelo:</strong>{" "}
-                  {student.courseParallel.parallel.name}
+                  {student.enrollments?.[0]?.courseParallel.parallel.name || "No Asignado"}
                 </p>
               </div>
             </div>

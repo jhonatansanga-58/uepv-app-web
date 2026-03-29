@@ -30,7 +30,6 @@ export default function StudentEditModal({
     phone: "",
     birthDate: "",
     gender: "",
-    cardCode: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -50,7 +49,6 @@ export default function StudentEditModal({
           phone: data.user.phone || "",
           birthDate: data.birthDate ? data.birthDate.substring(0, 10) : "",
           gender: data.gender || "",
-          cardCode: data.cardCode,
         });
         setLoading(false);
       })
@@ -122,16 +120,7 @@ export default function StudentEditModal({
                   required
                 />
               </div>
-              <div>
-                <Label htmlFor="cardCode">Código de tarjeta</Label>
-                <TextInput
-                  id="cardCode"
-                  name="cardCode"
-                  value={formData.cardCode}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+
               <div>
                 <Label htmlFor="birthDate">Fecha de nacimiento</Label>
                 <TextInput

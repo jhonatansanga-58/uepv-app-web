@@ -13,10 +13,17 @@ export async function GET(req: Request, context: { params: { id: string } }) {
       where: { id: studentId },
       include: {
         user: true,
-        courseParallel: {
+        enrollments: {
+          where: {
+            academicYear: { active: true },
+          },
           include: {
-            course: true,
-            parallel: true,
+            courseParallel: {
+              include: {
+                course: true,
+                parallel: true,
+              },
+            },
           },
         },
         tutorships: {
@@ -70,7 +77,6 @@ export async function PATCH(
         : null;
 
     if ("gender" in data) studentUpdateData.gender = data.gender || null;
-    if ("cardCode" in data) studentUpdateData.cardCode = data.cardCode;
 
     if (Object.keys(userUpdateData).length > 0) {
       studentUpdateData.user = {
@@ -83,10 +89,17 @@ export async function PATCH(
       data: studentUpdateData,
       include: {
         user: true,
-        courseParallel: {
+        enrollments: {
+          where: {
+            academicYear: { active: true },
+          },
           include: {
-            course: true,
-            parallel: true,
+            courseParallel: {
+              include: {
+                course: true,
+                parallel: true,
+              },
+            },
           },
         },
         tutorships: {

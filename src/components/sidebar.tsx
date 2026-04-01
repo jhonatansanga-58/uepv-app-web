@@ -65,6 +65,9 @@ export function SideBarComponent() {
                   open={false}
                   className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
                 >
+                  <SidebarItem href="/admin/academic-years">
+                    Gestiones
+                  </SidebarItem>
                   <SidebarItem href="/admin/courses">
                     Cursos
                   </SidebarItem>

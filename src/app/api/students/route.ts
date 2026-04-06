@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
       courseId,
       parallelId,
       tutorId,
+      fingerprintBase64,
     } = body;
     // Removimos dependencias de cardCode del controlador tal y como se eliminó de Prisma
 
@@ -143,13 +144,13 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // 4. Crear el perfil de estudiante (sin fingerprint de momento)
+      // 4. Crear el perfil de estudiante (con la huella digital si se capturó)
       const newStudent = await tx.student.create({
         data: {
           id: newUser.id,
           birthDate: birthDate ? new Date(`${birthDate}T12:00:00Z`) : null,
           gender: gender || null,
-          fingerprint: null,
+          fingerprint: fingerprintBase64 || null,
         },
       });
 

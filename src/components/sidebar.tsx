@@ -106,7 +106,10 @@ export function SideBarComponent() {
                 className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
               >
                 {(userRole === 'ADMIN' || userRole === 'TEACHER') && (
-                  <SidebarItem href="/attendances/register">Registrar</SidebarItem>
+                  <>
+                    <SidebarItem href="/attendances/register">Registrar manualmente</SidebarItem>
+                    <SidebarItem href="/attendances/register-fingerprint">Registrar con huella</SidebarItem>
+                  </>
                 )}
                 <SidebarItem href="/attendances/history">Historial</SidebarItem>
               </SidebarCollapse>

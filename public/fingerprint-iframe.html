@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Fingerprint Iframe</title>
+    <style>
+        body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; background: #f8fafc; overflow: hidden; color: #334155; }
+        #status { font-size: 14px; font-weight: 600; text-align: center; margin-bottom: 8px; }
+        .spinner { border: 3px solid rgba(0,0,0,0.1); width: 24px; height: 24px; border-radius: 50%; border-left-color: #3b82f6; animation: spin 1s linear infinite; margin: 0 auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .finger-icon { font-size: 32px; margin-bottom: 8px; }
+        #scans-container { display: flex; gap: 4px; margin-top: 10px; }
+        .scan-box { width: 30px; height: 40px; border: 1px solid #cbd5e1; background: #fff; display: flex; align-items: center; justify-content: center; border-radius: 4px; overflow: hidden; }
+        .scan-box img { width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+    </style>
+</head>
+<body>
+    <div class="finger-icon">🖐️</div>
+    <div id="status">Cargando motor biométrico...</div>
+    <div class="spinner" id="loading"></div>
+    <div id="scans-container"></div>
+
+    <script src="/fingerprint/websdk.client.bundle.min.js"></script>
+    <script src="/fingerprint/fingerprint.sdk.min.js"></script>
+    <script>
+        let captures = [];
+        let scanLimit = 4;
+
+        // Draw preview boxes
+        function initBoxes() {
+            const container = document.getElementById("scans-container");
+            container.innerHTML = "";
+            for (let i = 0; i < scanLimit; i++) {
+                const box = document.createElement("div");
+                box.className = "scan-box";
+                box.id = "scan-" + i;
+                container.appendChild(box);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("mode") === "verify") {
+                scanLimit = 1;
+            }
+            initBoxes();
+            setTimeout(init, 300);
+        });
+
+        async function init() {
+            const statusEl = document.getElementById("status");
+            const loading = document.getElementById("loading");
+
+            if (!window.Fingerprint) {
+                statusEl.innerText = "Error: Librería no detectada.";
+                return;
+            }
+
+            try {
+                const sdk = new window.Fingerprint.WebApi();
+                
+                sdk.onDeviceConnected = function() {
+                    statusEl.innerText = "Lector conectado. Ponga su dedo.";
+                    loading.style.display = "block";
+                };
+                
+                sdk.onDeviceDisconnected = function() {
+                    statusEl.innerText = "El lector fue desconectado USB.";
+                    loading.style.display = "none";
+                };
+                
+                sdk.onCommunicationFailed = function() {
+                    statusEl.innerText = "Error de Lector. Reconecte el USB.";
+                    loading.style.display = "none";
+                };
+
+                sdk.onSamplesAcquired = function(s) {
+                    try {
+                        if (captures.length >= scanLimit) return;
+                        
+                        const samples = JSON.parse(s.samples);
+                        const base64 = window.Fingerprint.b64UrlTo64(samples[0]);
+                        
+                        captures.push(base64);
+                        
+                        // Update visual box
+                        const box = document.getElementById("scan-" + (captures.length - 1));
+                        if(box) {
+                            box.innerHTML = `<img src="data:image/png;base64,${base64}" />`;
+                            box.style.borderColor = "#22c55e";
+                        }
+                        
+                        if (captures.length >= scanLimit) {
+                            statusEl.innerText = "¡Captura completada!";
+                            statusEl.style.color = "#16a34a";
+                            loading.style.display = "none";
+                            
+                            const payload = scanLimit === 1 ? captures[0] : JSON.stringify(captures);
+                            window.parent.postMessage({ type: "FINGERPRINT_CAPTURED", payload: payload }, "*");
+                            
+                            try { sdk.stopAcquisition(); } catch(e){}
+                        } else {
+                            statusEl.innerText = `Lecturas: ${captures.length}/${scanLimit}. Toque de nuevo.`;
+                        }
+                    } catch(e) {
+                         console.error(e);
+                    }
+                };
+
+                const readers = await sdk.enumerateDevices();
+                if (!readers || readers.length === 0) {
+                    statusEl.innerText = "WebAPI apagada o error 400.";
+                    return;
+                }
+
+                await sdk.startAcquisition(window.Fingerprint.SampleFormat.PngImage, readers[0]);
+                statusEl.innerText = `Escáner Activo. Ponga su dedo (0/${scanLimit}).`;
+                loading.style.display = "block";
+
+            } catch(e) {
+                statusEl.innerText = "Error USB: " + e.message;
+            }
+        }
+    </script>
+</body>
+</html>

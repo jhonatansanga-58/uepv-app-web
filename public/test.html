@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fingerprint Test</title>
+</head>
+<body>
+    <h1>Fingerprint Raw Test</h1>
+    <p id="status">Loading scripts...</p>
+    <div id="scans"></div>
+
+    <script src="/fingerprint/websdk.client.bundle.min.js"></script>
+    <script src="/fingerprint/fingerprint.sdk.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(init, 500); // Wait for scripts
+        });
+
+        async function init() {
+            const statusEl = document.getElementById("status");
+            if (!window.Fingerprint) {
+                statusEl.innerText = "Error: Library not loaded";
+                return;
+            }
+
+            statusEl.innerText = "Initializing SDK...";
+            try {
+                const sdk = new window.Fingerprint.WebApi();
+                
+                sdk.onDeviceConnected = function() {
+                    statusEl.innerText = "Device Connected!";
+                };
+
+                sdk.onDeviceDisconnected = function() {
+                    statusEl.innerText = "Device Disconnected";
+                };
+
+                sdk.onCommunicationFailed = function() {
+                    statusEl.innerText = "Communication Failed. (400 Bad Request usually)";
+                };
+
+                sdk.onSamplesAcquired = function(s) {
+                    try {
+                        const samples = JSON.parse(s.samples);
+                        const base64 = window.Fingerprint.b64UrlTo64(samples[0]);
+                        statusEl.innerText = "Captured successfully! See below.";
+                        const img = document.createElement("img");
+                        img.src = "data:image/png;base64," + base64;
+                        document.getElementById("scans").appendChild(img);
+                    } catch(e) {
+                        statusEl.innerText = "Capture format error: " + e.message;
+                    }
+                };
+
+                const readers = await sdk.enumerateDevices();
+                if (!readers || readers.length === 0) {
+                    statusEl.innerText = "No USB Fingerprint device found.";
+                    return;
+                }
+
+                await sdk.startAcquisition(window.Fingerprint.SampleFormat.PngImage, readers[0]);
+                statusEl.innerText = "Laser is ON! Put your finger on the scanner.";
+
+            } catch(e) {
+                statusEl.innerText = "Fatal initialization error: " + e.message;
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>

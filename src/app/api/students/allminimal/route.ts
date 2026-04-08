@@ -7,15 +7,16 @@ export async function GET() {
       where: { user: { active: true } },
       include: {
         user: true,
-        courseParallel: { include: { course: true, parallel: true } },
+        enrollments: { include: { courseParallel: { include: { course: true, parallel: true } } } },
       },
       orderBy: { user: { lastName: "asc" } },
     });
 
     const result = students.map((s) => {
       const name = `${s.user.firstName} ${s.user.lastName}`;
-      const course = s.courseParallel?.course?.name ?? "Sin curso";
-      const parallel = s.courseParallel?.parallel?.name ?? "";
+      const cp = s.enrollments?.[0]?.courseParallel;
+      const course = cp?.course?.name ?? "Sin curso";
+      const parallel = cp?.parallel?.name ?? "";
       const label = parallel ? `${name} - ${course} - ${parallel}` : `${name} - ${course}`;
       return { id: s.id, label };
     });

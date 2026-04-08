@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const leave = await prisma.leaveRequest.findUnique({
       where: { id },
       include: {
-        student: { include: { user: true, courseParallel: { include: { course: true } } } },
+        student: { include: { user: true, enrollments: { include: { courseParallel: { include: { course: true } } } } } },
         tutor: true,
       },
     });
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const result = {
       ...leave,
-      studentCourse: leave.student.courseParallel?.course ?? null,
+      studentCourse: leave.student?.enrollments?.[0]?.courseParallel?.course ?? null,
       counts: { approvedCount, pendingCount, rejectedCount },
     };
 

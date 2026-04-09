@@ -8,7 +8,12 @@ import {
   Select,
   Datepicker,
   Card,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from "flowbite-react";
+import { HiClipboardCopy } from "react-icons/hi";
 import FingerprintScanner from "@/components/FingerprintScanner";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -32,7 +37,6 @@ interface FormData {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
   phone: string;
   address: string;
   birthDate: string;
@@ -48,7 +52,6 @@ export default function CreateStudentForm() {
     firstName: "",
     lastName: "",
     email: "",
-    password: "",
     phone: "",
     address: "",
     birthDate: "",
@@ -63,6 +66,7 @@ export default function CreateStudentForm() {
   const [parallels, setParallels] = useState<Parallel[]>([]);
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [scannerResetKey, setScannerResetKey] = useState<number>(0);
+  const [credentialsData, setCredentialsData] = useState<{userName: string, rawPassword: string} | null>(null);
 
   useEffect(() => {
     fetch("/api/courses")
@@ -117,7 +121,6 @@ export default function CreateStudentForm() {
           firstName: "",
           lastName: "",
           email: "",
-          password: "",
           phone: "",
           address: "",
           birthDate: "",
@@ -128,6 +131,12 @@ export default function CreateStudentForm() {
           fingerprintBase64: "", // Limpiar estado de huella
         });
         
+        // Mostrar credenciales generadas
+        const responseData = await res.json();
+        if (responseData.user?.userName && responseData.rawPassword) {
+            setCredentialsData({ userName: responseData.user.userName, rawPassword: responseData.rawPassword });
+        }
+
         // Al forzar el cambio de la clave (key), React destruye por completo
         // el componente FingerprintScanner y lo vuelve a montar, reiniciándolo.
         setScannerResetKey(prev => prev + 1);
@@ -142,7 +151,7 @@ export default function CreateStudentForm() {
   };
 
   const isFormFilled = 
-     formData.firstName && formData.lastName && formData.email && formData.password 
+     formData.firstName && formData.lastName && formData.email 
      && formData.courseId && formData.parallelId;
 
   return (
@@ -179,16 +188,6 @@ export default function CreateStudentForm() {
               value={formData.email}
               onChange={handleChange}
               type="email"
-              required
-            />
-          </div>
-          <div>
-            <Label>Contraseña</Label>
-            <TextInput
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              type="password"
               required
             />
           </div>
@@ -297,6 +296,43 @@ export default function CreateStudentForm() {
           </div>
         </form>
       </Card>
+
+      {/* MODAL DE CREDENCIALES GENERADAS */}
+      <Modal show={!!credentialsData} onClose={() => setCredentialsData(null)} size="md">
+        <ModalHeader>¡Estudiante Matriculado Exitosamente!</ModalHeader>
+        <ModalBody>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Entregue estas credenciales iniciales al estudiante para acceder al Portal Académico. El sistema le pedirá actualizar su contraseña en su primer inicio de sesión.
+            </p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="mb-2">
+                <Label className="text-xs text-gray-400 uppercase tracking-widest">Nombre de Usuario</Label>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="font-mono text-lg font-bold text-gray-900">{credentialsData?.userName}</span>
+                  <button onClick={() => navigator.clipboard.writeText(credentialsData?.userName || "")} className="text-gray-400 hover:text-primary-600">
+                    <HiClipboardCopy size={20} />
+                  </button>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-gray-200">
+                <Label className="text-xs text-gray-400 uppercase tracking-widest">Contraseña Temporal</Label>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="font-mono text-lg font-bold text-primary-700">{credentialsData?.rawPassword}</span>
+                  <button onClick={() => navigator.clipboard.writeText(credentialsData?.rawPassword || "")} className="text-gray-400 hover:text-primary-600">
+                    <HiClipboardCopy size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ModalBody>
+        <ModalFooter className="flex justify-end">
+          <Button onClick={() => setCredentialsData(null)} color="success">
+            Comprendido
+          </Button>
+        </ModalFooter>
+      </Modal>
     </>
   );
 }

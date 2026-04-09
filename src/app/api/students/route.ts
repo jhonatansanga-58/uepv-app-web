@@ -75,7 +75,6 @@ export async function POST(req: NextRequest) {
       firstName,
       lastName,
       email,
-      password,
       phone,
       address,
       birthDate,
@@ -91,7 +90,6 @@ export async function POST(req: NextRequest) {
       !firstName ||
       !lastName ||
       !email ||
-      !password ||
       !courseId ||
       !parallelId
     ) {
@@ -131,12 +129,18 @@ export async function POST(req: NextRequest) {
         (lastName ? lastName.substring(0, 3).toLowerCase() : "") +
         generateRandomSuffix();
 
+      // Constructor de contraseña predecible temporal: Uepv-PrimerNombre
+      const firstWord = firstName.trim().split(' ')[0];
+      const rawPassword = `Uepv-${firstWord}`;
+      const bcrypt = require('bcrypt'); // Importamos aquí o idealmente arriba
+      const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
       const newUser = await tx.user.create({
         data: {
           firstName,
           lastName,
           email,
-          password, // si estás usando bcrypt, recordá hashearlo antes
+          password: hashedPassword,
           phone: phone || null,
           address: address || null,
           role: "STUDENT",
@@ -191,7 +195,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return createdStudent;
+      return { ...createdStudent, rawPassword };
     });
 
     return NextResponse.json(result, { status: 201 });

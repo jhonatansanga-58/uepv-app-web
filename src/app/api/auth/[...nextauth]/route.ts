@@ -54,26 +54,38 @@ const handler = NextAuth({
           throw new Error("Invalid password");
         }
 
+        // Verificador de contraseña por defecto (Fase 2.2)
+        // Detectar si el usuario sigue usando la contraseña auto-generada
+        const firstWord = user.firstName.trim().split(' ')[0];
+        const defaultPassword = `Uepv-${firstWord}`;
+        const isUsingDefaultPassword = credentials.password === defaultPassword;
+
         return {
           id: user.id.toString(),
           name: `${user.firstName} ${user.lastName}`,
           email: user.email,
           userName: user.userName,
           role: user.role,
+          forcePasswordChange: isUsingDefaultPassword,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Add custom fields to JWT token
       if (user) {
         return {
           ...token,
           id: user.id,
-          userName: user.userName,
-          role: user.role,
+          userName: (user as any).userName,
+          role: (user as any).role,
+          forcePasswordChange: (user as any).forcePasswordChange,
         };
+      }
+      // If the user updates their session manually (e.g., after resetting password)
+      if (trigger === "update" && session?.forcePasswordChange === false) {
+        return { ...token, forcePasswordChange: false };
       }
       return token;
     },
@@ -83,9 +95,10 @@ const handler = NextAuth({
         ...session,
         user: {
           ...session.user,
-          id: token.id,
-          userName: token.userName,
-          role: token.role,
+          id: token.id as string,
+          userName: token.userName as string,
+          role: token.role as string,
+          forcePasswordChange: token.forcePasswordChange as boolean,
         },
       };
     },

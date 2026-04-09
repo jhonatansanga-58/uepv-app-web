@@ -8,14 +8,13 @@ export async function POST(req: Request) {
       firstName,
       lastName,
       email,
-      password,
       role,
       phone,
       address,
       active,
     } = await req.json();
 
-    if (!firstName || !lastName || !email || !password || !role) {
+    if (!firstName || !lastName || !email || !role) {
       return NextResponse.json(
         { error: "Faltan campos obligatorios" },
         { status: 400 }
@@ -31,18 +30,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // Encriptar contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Constructor de contraseña predecible temporal: Uepv-PrimerNombre
+    const firstWord = firstName.trim().split(' ')[0];
+    const rawPassword = `Uepv-${firstWord}`;
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
     function generateRandomSuffix() {
       // Genera un número entre 10000 y 99999 (5 cifras)
       return Math.floor(10000 + Math.random() * 90000);
     }
+
     const newUser = await prisma.user.create({
       data: {
         firstName,
         lastName,
         email,
-        userName: firstName.sbtring(0, 1).toLowerCase() + lastName.sbtring(0, 3).toLowerCase() + generateRandomSuffix(),
+        userName: firstName.substring(0, 1).toLowerCase() + lastName.substring(0, 3).toLowerCase() + generateRandomSuffix(),
         password: hashedPassword,
         role,
         phone: phone || null,
@@ -51,7 +54,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json(newUser, { status: 201 });
+    return NextResponse.json({ ...newUser, rawPassword }, { status: 201 });
   } catch (error) {
     console.error("Error creando usuario:", error);
     return NextResponse.json(

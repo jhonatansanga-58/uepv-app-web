@@ -68,6 +68,21 @@ export async function middleware(req: NextRequest) {
     return NextResponse.rewrite(new URL('/unauthorized', req.url));
   }
 
+  // FORCE PASSWORD CHANGE LOGIC (Fase 2.2)
+  if (token.forcePasswordChange === true) {
+    if (!pathname.startsWith('/force-change') && !pathname.startsWith('/api/auth')) {
+       // If it's an API route but not auth, return 403 forcing a change
+       if (pathname.startsWith('/api')) {
+          return new NextResponse(JSON.stringify({ error: 'Password change required', forcePasswordChange: true }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          });
+       }
+       // Redirect to forced password change UI
+       return NextResponse.redirect(new URL('/force-change', req.url));
+    }
+  }
+
   return NextResponse.next();
 }
 

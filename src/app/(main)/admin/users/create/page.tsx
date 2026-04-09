@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, Label, Select, TextInput } from "flowbite-react";
+import { Button, Card, Label, Select, TextInput, Modal, ModalHeader, ModalBody, ModalFooter } from "flowbite-react";
 import AssignStudentsModal from "@/components/assignStudentsModal";
 import AssignSubjectsModal from "@/components/assignSubjectsModal";
+import { HiClipboardCopy } from "react-icons/hi";
 
 export default function CreateUserPage() {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    password: "",
-    role: "STUDENT",
+    role: "",
     phone: "",
     address: "",
     active: true,
@@ -19,10 +19,10 @@ export default function CreateUserPage() {
 
   const [openStudents, setOpenStudents] = useState(false);
   const [openSubjects, setOpenSubjects] = useState(false);
+  const [credentialsData, setCredentialsData] = useState<{userName: string, rawPassword: string} | null>(null);
+
   const [createdUserId, setCreatedUserId] = useState<number | null>(null);
-  const [createdRole, setCreatedRole] = useState<"TUTOR" | "TEACHER" | "OTHER">(
-    "OTHER"
-  );
+  const [createdRole, setCreatedRole] = useState<"TUTOR" | "TEACHER" | "OTHER">("OTHER");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -69,7 +69,6 @@ export default function CreateUserPage() {
           firstName: "",
           lastName: "",
           email: "",
-          password: "",
           role: "",
           phone: "",
           address: "",
@@ -78,15 +77,23 @@ export default function CreateUserPage() {
 
         setCreatedUserId(data.id);
         setCreatedRole(data.role);
-        if (data.role === "TUTOR") setOpenStudents(true);
-        else if (data.role === "TEACHER") setOpenSubjects(true);
-        alert("Usuario creado correctamente");
+        
+        // Mostrar credenciales automáticamente
+        if(data.userName && data.rawPassword) {
+           setCredentialsData({ userName: data.userName, rawPassword: data.rawPassword });
+        }
       }
     } catch {
       setError("Error de conexión");
     } finally {
       setLoading(false);
     }
+  };
+
+  const closeCredentialsModal = () => {
+    setCredentialsData(null);
+    if (createdRole === "TUTOR") setOpenStudents(true);
+    else if (createdRole === "TEACHER") setOpenSubjects(true);
   };
 
   async function saveStudentAssignments(studentIds: number[]) {
@@ -152,16 +159,6 @@ export default function CreateUserPage() {
             />
           </div>
           <div>
-            <Label>Contraseña</Label>
-            <TextInput
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              type="password"
-              required
-            />
-          </div>
-          <div>
             <Label>Teléfono</Label>
             <TextInput
               name="phone"
@@ -189,10 +186,9 @@ export default function CreateUserPage() {
               <option value="ADMIN">Administrador</option>{" "}
               <option value="TEACHER">Docente</option>
               <option value="TUTOR">Padre</option>
-              <option value="STUDENT">Estudiante</option>
             </Select>
           </div>
-          
+
           <div className="md:col-span-2 text-right">
             <Button type="submit" disabled={loading}>
               {loading ? "Registrando..." : "Registrar usuario"}
@@ -228,6 +224,43 @@ export default function CreateUserPage() {
           onConfirm={saveSubjectAssignments}
         />
       )}
+
+      {/* MODAL DE CREDENCIALES GENERADAS */}
+      <Modal show={!!credentialsData} onClose={closeCredentialsModal} size="md">
+        <ModalHeader>¡Usuario Creado Exitosamente!</ModalHeader>
+        <ModalBody>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Entregue estas credenciales iniciales al usuario. El sistema le pedirá que actualice su contraseña en su primer inicio de sesión.
+            </p>
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="mb-2">
+                <Label className="text-xs text-gray-400 uppercase tracking-widest">Nombre de Usuario</Label>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="font-mono text-lg font-bold text-gray-900">{credentialsData?.userName}</span>
+                  <button onClick={() => navigator.clipboard.writeText(credentialsData?.userName || "")} className="text-gray-400 hover:text-primary-600">
+                    <HiClipboardCopy size={20} />
+                  </button>
+                </div>
+              </div>
+              <div className="pt-2 border-t border-gray-200">
+                <Label className="text-xs text-gray-400 uppercase tracking-widest">Contraseña Temporal</Label>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="font-mono text-lg font-bold text-primary-700">{credentialsData?.rawPassword}</span>
+                  <button onClick={() => navigator.clipboard.writeText(credentialsData?.rawPassword || "")} className="text-gray-400 hover:text-primary-600">
+                    <HiClipboardCopy size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ModalBody>
+        <ModalFooter className="flex justify-end">
+          <Button onClick={closeCredentialsModal} color="success">
+            Comprendido
+          </Button>
+        </ModalFooter>
+      </Modal>
     </>
   );
 }

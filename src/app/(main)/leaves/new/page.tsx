@@ -21,6 +21,7 @@ export default function NewLeavePage() {
   const [reason, setReason] = useState("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [evidence, setEvidence] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -47,14 +48,26 @@ export default function NewLeavePage() {
     setIsLoading(true);
     try {
       if (!studentId || !title || !message || !reason || !startDate || !endDate) {
-        setError("Todos los campos son obligatorios");
+        setError("Todos los campos con * son obligatorios");
         setIsLoading(false);
         return;
       }
+      
+      const formData = new FormData();
+      formData.append("studentId", studentId);
+      formData.append("title", title);
+      formData.append("message", message);
+      formData.append("reason", reason);
+      formData.append("startDate", startDate);
+      formData.append("endDate", endDate);
+      
+      if (evidence) {
+        formData.append("evidence", evidence);
+      }
+
       const res = await fetch("/api/leaverequest", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId, title, message, reason, startDate, endDate }),
+        body: formData,
       });
       if (!res.ok) {
         const data = await res.json();
@@ -120,7 +133,7 @@ export default function NewLeavePage() {
           />
         </div>
         <div>
-          <Label htmlFor="startDate">Fecha de inicio</Label>
+          <Label htmlFor="startDate">Fecha de inicio *</Label>
           <Datepicker
             id="startDate"
             value={startDate ? new Date(startDate) : undefined}
@@ -129,12 +142,22 @@ export default function NewLeavePage() {
           />
         </div>
         <div>
-          <Label htmlFor="endDate">Fecha de fin</Label>
+          <Label htmlFor="endDate">Fecha de fin *</Label>
           <Datepicker
             id="endDate"
             value={endDate ? new Date(endDate) : undefined}
             onChange={date => setEndDate(date ? date.toISOString().split("T")[0] : "")}
             required
+          />
+        </div>
+        <div className="md:col-span-2 mt-2">
+          <Label htmlFor="evidence">Evidencia Adjunta (Imagen o PDF, opcional)</Label>
+          <input 
+            id="evidence" 
+            type="file" 
+            accept="image/*,application/pdf" 
+            className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" 
+            onChange={(e) => setEvidence(e.target.files?.[0] || null)} 
           />
         </div>
         <div className="md:col-span-2 text-right mt-4">

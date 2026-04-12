@@ -2,15 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
+import { sendMulticast } from "@/utils/notifications";
 
 export async function GET(request: NextRequest) {
   try {
     const token = await getToken({ req: request });
     if (!token?.sub || !token?.role) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const role = token.role as Role;
@@ -19,27 +17,15 @@ export async function GET(request: NextRequest) {
     switch (role) {
       case Role.ADMIN:
       case Role.TEACHER: {
-        // Get notifications created by the user
         const userNotifications = await prisma.notification.findMany({
-          where: {
-            creatorId: userId,
-          },
+          where: { creatorId: userId },
           include: {
-            // target user (if notification is for a specific user)
             user: true,
-            // courseParallel with nested course and parallel names
-            courseParallel: {
-              include: {
-                course: true,
-                parallel: true,
-              },
-            },
+            courseParallel: { include: { course: true, parallel: true } },
           },
           orderBy: { date: "desc" },
         });
 
-        // Attach the creator user (the requesting user) to each notification so the
-        // client receives a `creator` object matching the frontend Notification interface.
         const creatorUser = await prisma.user.findUnique({
           where: { id: userId },
           select: { id: true, firstName: true, lastName: true },
@@ -54,27 +40,13 @@ export async function GET(request: NextRequest) {
       }
 
       case Role.TUTOR: {
-        // Get notifications where:
-        // 1. Tutor is the target user
-        // 2. Tutor's students' courses are target
-        // 3. Global notifications (no userId/courseParallelId)
-
-        // First get all course parallels where tutor has students
         const tutorStudentCourses = await prisma.courseParallel.findMany({
           where: {
-            students: {
-              some: {
-                tutorships: {
-                  some: {
-                    tutorId: userId
-                  }
-                }
-              }
+            enrollments: {
+              some: { student: { tutorships: { some: { tutorId: userId } } } }
             }
           },
-          select: {
-            id: true
-          }
+          select: { id: true }
         });
 
         const courseIds = tutorStudentCourses.map(c => c.id);
@@ -85,25 +57,14 @@ export async function GET(request: NextRequest) {
             OR: [
               { userId: userId },
               { courseParallelId: { in: courseIds } },
-              {
-                AND: [
-                  { userId: null },
-                  { courseParallelId: null }
-                ]
-              }
+              { AND: [{ userId: null }, { courseParallelId: null }] }
             ]
           },
           include: {
-            courseParallel: {
-              include: {
-                course: true,
-                parallel: true
-              }
-            }
+            courseParallel: { include: { course: true, parallel: true } }
           }
         });
 
-        // Attach creator info for each notification
         const tutorCreatorIds = Array.from(new Set(tutorNotifications.map((n) => n.creatorId)));
         const tutorCreators = tutorCreatorIds.length
           ? await prisma.user.findMany({
@@ -121,47 +82,26 @@ export async function GET(request: NextRequest) {
       }
 
       case Role.STUDENT: {
-        // Get student's course
-        const student = await prisma.student.findUnique({
-          where: { id: userId }
+        const studentEnrollments = await prisma.enrollment.findMany({
+          where: { studentId: userId, academicYear: { active: true } },
         });
 
-        if (!student) {
-          return NextResponse.json(
-            { error: "Student profile not found" },
-            { status: 404 }
-          );
-        }
+        const courseParallelIds = studentEnrollments.map(e => e.courseParallelId);
 
-        // Get notifications where:
-        // 1. Student is the target user
-        // 2. Student's course is target
-        // 3. Global notifications (no userId/courseParallelId)
         const studentNotifications = await prisma.notification.findMany({
           where: {
             active: true,
             OR: [
               { userId: userId },
-              { courseParallelId: student.courseParallelId },
-              {
-                AND: [
-                  { userId: null },
-                  { courseParallelId: null }
-                ]
-              }
+              { courseParallelId: { in: courseParallelIds } },
+              { AND: [{ userId: null }, { courseParallelId: null }] }
             ]
           },
           include: {
-            courseParallel: {
-              include: {
-                course: true,
-                parallel: true
-              }
-            }
+            courseParallel: { include: { course: true, parallel: true } }
           }
         });
 
-        // Attach creator info for each notification
         const studentCreatorIds = Array.from(new Set(studentNotifications.map((n) => n.creatorId)));
         const studentCreators = studentCreatorIds.length
           ? await prisma.user.findMany({
@@ -178,18 +118,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(studentNotificationsWithCreator);
       }
 
-      default:
-        return NextResponse.json(
-          { error: "Invalid role" },
-          { status: 403 }
-        );
+      default: return NextResponse.json({ error: "Invalid role" }, { status: 403 });
     }
   } catch (error) {
     console.error("Error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -197,10 +130,7 @@ export async function POST(request: NextRequest) {
   try {
     const token = await getToken({ req: request });
     if (!token?.sub || !token?.role) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const role = token.role as Role;
@@ -226,21 +156,56 @@ export async function POST(request: NextRequest) {
       },
       include: {
         user: true,
-        courseParallel: {
-          include: {
-            course: true,
-            parallel: true,
-          },
-        },
+        courseParallel: { include: { course: true, parallel: true } },
       },
     });
+
+    // --- Firebase Push Notification Logic ---
+    const tokens: string[] = [];
+
+    if (targetUserId) {
+       // Individual user 
+       const targetUser = await prisma.user.findUnique({
+          where: { id: parseInt(String(targetUserId), 10) },
+          include: { studentProfile: { include: { tutorships: { include: { tutor: true } } } } }
+       });
+       if (targetUser?.firebaseToken) tokens.push(targetUser.firebaseToken);
+       if (targetUser?.studentProfile) {
+          targetUser.studentProfile.tutorships.forEach(ts => {
+             if (ts.tutor.firebaseToken) tokens.push(ts.tutor.firebaseToken);
+          });
+       }
+    } else if (courseParallelId) {
+       // A whole parallel (Students + Tutors)
+       const enrollments = await prisma.enrollment.findMany({
+          where: { courseParallelId: parseInt(String(courseParallelId), 10), academicYear: { active: true } },
+          include: { student: { include: { user: true, tutorships: { include: { tutor: true } } } } }
+       });
+       enrollments.forEach(en => {
+          if (en.student.user?.firebaseToken) tokens.push(en.student.user.firebaseToken);
+          en.student.tutorships.forEach(ts => {
+             if (ts.tutor.firebaseToken) tokens.push(ts.tutor.firebaseToken);
+          });
+       });
+    } else {
+       // Broadcast to everyone via Global topic or fetching all tokens
+       const allUsersWithToken = await prisma.user.findMany({
+          where: { firebaseToken: { not: null }, active: true },
+          select: { firebaseToken: true }
+       });
+       allUsersWithToken.forEach(u => tokens.push(u.firebaseToken as string));
+    }
+
+    // Filter duplicates and push
+    if (tokens.length > 0) {
+       const uniqueTokens = [...new Set(tokens)];
+       sendMulticast(uniqueTokens, title, message, { route: "/comunicados" })
+         .catch((err: any) => console.error("Error multicasting push:", err));
+    }
 
     return NextResponse.json(notification);
   } catch (error) {
     console.error("Error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

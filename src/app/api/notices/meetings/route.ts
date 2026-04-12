@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
+import { sendMulticast } from "@/utils/notifications";
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,10 +30,15 @@ export async function GET(request: NextRequest) {
             student: {
               include: {
                 user: true,
-                courseParallel: {
+                enrollments: {
+                  where: { active: true },
                   include: {
-                    course: true,
-                    parallel: true
+                    courseParallel: {
+                      include: {
+                        course: true,
+                        parallel: true
+                      }
+                    }
                   }
                 }
               }
@@ -59,10 +65,15 @@ export async function GET(request: NextRequest) {
             student: {
               include: {
                 user: true,
-                courseParallel: {
+                enrollments: {
+                  where: { active: true },
                   include: {
-                    course: true,
-                    parallel: true
+                    courseParallel: {
+                      include: {
+                        course: true,
+                        parallel: true
+                      }
+                    }
                   }
                 }
               }
@@ -83,10 +94,15 @@ export async function GET(request: NextRequest) {
             student: {
               include: {
                 user: true,
-                courseParallel: {
+                enrollments: {
+                  where: { active: true },
                   include: {
-                    course: true,
-                    parallel: true
+                    courseParallel: {
+                      include: {
+                        course: true,
+                        parallel: true
+                      }
+                    }
                   }
                 }
               }
@@ -133,9 +149,13 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     const { studentId, topic, message } = data;
 
-    // Verify student exists
+    // Verify student exists and fetch tokens
     const student = await prisma.student.findUnique({
-      where: { id: studentId }
+      where: { id: studentId },
+      include: {
+        user: true,
+        tutorships: { include: { tutor: true } }
+      }
     });
 
     if (!student) {
@@ -161,6 +181,22 @@ export async function POST(request: NextRequest) {
         user: true
       }
     });
+
+    // Enviar notificación Push (Fase 3)
+    const tokens: string[] = [];
+    if (student.user.firebaseToken) tokens.push(student.user.firebaseToken);
+    student.tutorships.forEach((ts) => {
+       if (ts.tutor.firebaseToken) tokens.push(ts.tutor.firebaseToken);
+    });
+
+    if (tokens.length > 0) {
+       sendMulticast(
+         tokens, 
+         "📌 Nueva Citación Escolar", 
+         `Ha sido citado por el docente sobre: ${topic}`,
+         { route: "/citaciones" } // Metadata para la App Móvil
+       ).catch((err: any) => console.error("Error sending push:", err));
+    }
 
     return NextResponse.json(meeting);
   } catch (error) {

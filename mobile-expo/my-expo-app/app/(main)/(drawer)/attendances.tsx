@@ -36,12 +36,29 @@ export default function AttendancesScreen() {
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
 
+  const [userRole, setUserRole] = useState<string | null>(null);
+
   useEffect(() => {
-    // load students once for the tutor
+    // load students once for the tutor, or set self if student
     (async () => {
       try {
         const user = await AuthService.getCurrentUser();
         if (!user?.id) return;
+
+        setUserRole(user.role);
+
+        if (user.role === 'STUDENT') {
+          setSelectedStudent({
+            id: user.id,
+            firstName: user.name.split(' ')[0],
+            lastName: user.name.split(' ').slice(1).join(' '),
+            course: '',
+            parallel: ''
+          });
+          setStudents([]);
+          setFiltered([]);
+          return;
+        }
 
         const token = await AuthService.getToken();
         const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/mobile/tutors/${user.id}/students`, {
@@ -130,32 +147,38 @@ export default function AttendancesScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-4">
-        <Text className="text-lg font-medium mb-2">Buscar alumno</Text>
-        <TextInput
-          placeholder="Nombre, curso o código"
-          value={query}
-          onChangeText={t => {
-            setQuery(t);
-            setShowSuggestions(true);
-            if (!t) setSelectedStudent(null);
-          }}
-          onFocus={() => setShowSuggestions(true)}
-          className="bg-white p-3 rounded-lg border border-gray-200"
-        />
-
-        {showSuggestions && query.length > 0 && (
-          <View className="mt-3">
-            <FlatList
-              data={filtered}
-              keyExtractor={(i) => String(i.id)}
-              renderItem={renderItem}
-              keyboardShouldPersistTaps="handled"
-              scrollEnabled={false}
-              ListEmptyComponent={() => (
-                <Text className="text-sm text-gray-500">No se encontraron alumnos</Text>
-              )}
+        {userRole !== 'STUDENT' ? (
+          <>
+            <Text className="text-lg font-medium mb-2">Buscar alumno</Text>
+            <TextInput
+              placeholder="Nombre, curso o código"
+              value={query}
+              onChangeText={t => {
+                setQuery(t);
+                setShowSuggestions(true);
+                if (!t) setSelectedStudent(null);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              className="bg-white p-3 rounded-lg border border-gray-200"
             />
-          </View>
+
+            {showSuggestions && query.length > 0 && (
+              <View className="mt-3">
+                <FlatList
+                  data={filtered}
+                  keyExtractor={(i) => String(i.id)}
+                  renderItem={renderItem}
+                  keyboardShouldPersistTaps="handled"
+                  scrollEnabled={false}
+                  ListEmptyComponent={() => (
+                    <Text className="text-sm text-gray-500">No se encontraron alumnos</Text>
+                  )}
+                />
+              </View>
+            )}
+          </>
+        ) : (
+          <Text className="text-lg font-medium mb-2">Mis Asistencias</Text>
         )}
 
         <View className="flex-row justify-between items-center mt-4">

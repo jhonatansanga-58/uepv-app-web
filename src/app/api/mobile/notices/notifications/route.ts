@@ -57,19 +57,11 @@ export async function GET(request: NextRequest) {
       case Role.TUTOR: {
         const tutorStudentCourses = await prisma.courseParallel.findMany({
           where: {
-            students: {
-              some: {
-                tutorships: {
-                  some: {
-                    tutorId: userId
-                  }
-                }
-              }
+            enrollments: {
+              some: { student: { tutorships: { some: { tutorId: userId } } } }
             }
           },
-          select: {
-            id: true
-          }
+          select: { id: true }
         });
 
         const courseIds = tutorStudentCourses.map(c => c.id);
@@ -80,21 +72,11 @@ export async function GET(request: NextRequest) {
             OR: [
               { userId: userId },
               { courseParallelId: { in: courseIds } },
-              {
-                AND: [
-                  { userId: null },
-                  { courseParallelId: null }
-                ]
-              }
+              { AND: [{ userId: null }, { courseParallelId: null }] }
             ]
           },
           include: {
-            courseParallel: {
-              include: {
-                course: true,
-                parallel: true
-              }
-            }
+            courseParallel: { include: { course: true, parallel: true } }
           }
         });
 
@@ -118,38 +100,23 @@ export async function GET(request: NextRequest) {
       }
 
       case Role.STUDENT: {
-        const student = await prisma.student.findUnique({
-          where: { id: userId }
+        const studentEnrollments = await prisma.enrollment.findMany({
+          where: { studentId: userId, academicYear: { active: true } },
         });
 
-        if (!student) {
-          return NextResponse.json(
-            { error: "Student profile not found" },
-            { status: 404 }
-          );
-        }
+        const courseParallelIds = studentEnrollments.map(e => e.courseParallelId);
 
         const studentNotifications = await prisma.notification.findMany({
           where: {
             active: true,
             OR: [
               { userId: userId },
-              { courseParallelId: student.courseParallelId },
-              {
-                AND: [
-                  { userId: null },
-                  { courseParallelId: null }
-                ]
-              }
+              { courseParallelId: { in: courseParallelIds } },
+              { AND: [{ userId: null }, { courseParallelId: null }] }
             ]
           },
           include: {
-            courseParallel: {
-              include: {
-                course: true,
-                parallel: true
-              }
-            }
+            courseParallel: { include: { course: true, parallel: true } }
           }
         });
 

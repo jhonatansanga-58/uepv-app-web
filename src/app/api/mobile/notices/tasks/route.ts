@@ -60,17 +60,14 @@ export async function GET(request: NextRequest) {
         );
 
       case Role.TUTOR:
-        // Get tasks from courses of tutor's students
         const tutorTasks = await prisma.task.findMany({
           where: {
             active: true,
             courseParallel: {
-              students: {
+              enrollments: {
                 some: {
-                  tutorships: {
-                    some: {
-                      tutorId: userId
-                    }
+                  student: {
+                    tutorships: { some: { tutorId: userId } }
                   }
                 }
               }
@@ -78,12 +75,7 @@ export async function GET(request: NextRequest) {
           },
           include: {
             subject: true,
-            courseParallel: {
-              include: {
-                course: true,
-                parallel: true
-              }
-            }
+            courseParallel: { include: { course: true, parallel: true } }
           }
         });
         return new NextResponse(
@@ -92,31 +84,24 @@ export async function GET(request: NextRequest) {
         );
 
       case Role.STUDENT:
-        // Get tasks from student's course
-        const student = await prisma.student.findUnique({
-          where: { id: userId }
+        const studentEnrollments = await prisma.enrollment.findMany({
+          where: { studentId: userId, academicYear: { active: true } }
         });
-
-        if (!student) {
-          return new NextResponse(
-            JSON.stringify({ error: "Student profile not found" }),
-            { status: 404, headers: corsHeaders }
-          );
+        
+        if (studentEnrollments.length === 0) {
+           return new NextResponse(JSON.stringify([]), { status: 200, headers: corsHeaders });
         }
+        
+        const courseParallelIds = studentEnrollments.map(e => e.courseParallelId);
 
         const studentTasks = await prisma.task.findMany({
           where: {
-            courseParallelId: student.courseParallelId,
+            courseParallelId: { in: courseParallelIds },
             active: true
           },
           include: {
             subject: true,
-            courseParallel: {
-              include: {
-                course: true,
-                parallel: true
-              }
-            }
+            courseParallel: { include: { course: true, parallel: true } }
           }
         });
         return new NextResponse(

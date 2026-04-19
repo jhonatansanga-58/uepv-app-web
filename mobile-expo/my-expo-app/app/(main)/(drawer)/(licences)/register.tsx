@@ -5,6 +5,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "constants/colors";
+import * as DocumentPicker from "expo-document-picker";
 
 interface Student {
   id: number;
@@ -70,8 +71,6 @@ const validateForm = (
     errors.reason = `El motivo no puede exceder ${REASON_MAX_LENGTH} caracteres`;
   }
 
-  // Allow same-day leaves (periods of one day). Only invalidate when
-  // the end date is earlier than the start date.
   if (startDate.getTime() > endDate.getTime()) {
     errors.dates = "La fecha de fin no puede ser anterior a la fecha de inicio";
   }
@@ -97,12 +96,32 @@ const Register = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
+  const [evidenceFile, setEvidenceFile] = useState<DocumentPicker.DocumentPickerAsset | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
       try {
         setLoadingStudents(true);
         const user = await AuthService.getCurrentUser();
         if (!user?.id) return;
+
+        setUserRole(user.role);
+
+        if (user.role === 'STUDENT') {
+          const stdId = user.id;
+          setStudentId(stdId);
+          setSelectedStudent({
+            id: stdId,
+            firstName: user.name.split(' ')[0],
+            lastName: user.name.split(' ').slice(1).join(' '),
+            course: '',
+            parallel: ''
+          });
+          setStudents([]);
+          return;
+        }
+
         const token = await AuthService.getToken();
         const res = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/mobile/tutors/${user.id}/students`,
@@ -132,11 +151,24 @@ const Register = () => {
     })();
   }, []);
 
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*", "application/pdf"], // Allow images and PDFs
+        copyToCacheDirectory: true
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setEvidenceFile(result.assets[0]);
+      }
+    } catch (err) {
+      console.error("Error picking document:", err);
+    }
+  };
+
   const handleSubmit = async () => {
     setError("");
     setValidationErrors({});
 
-    // Validate form
     const errors = validateForm(studentId, title, message, reason, startDate, endDate);
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -146,40 +178,53 @@ const Register = () => {
     setIsLoading(true);
     try {
       const token = await AuthService.getToken();
+
+      const formData = new FormData();
+      formData.append("studentId", String(studentId));
+      formData.append("title", title.trim());
+      formData.append("message", message.trim());
+      formData.append("reason", reason.trim());
+      formData.append("startDate", startDate.toISOString().split("T")[0]);
+      formData.append("endDate", endDate.toISOString().split("T")[0]);
+
+      if (evidenceFile) {
+        formData.append("evidence", {
+          uri: evidenceFile.uri,
+          name: evidenceFile.name,
+          type: evidenceFile.mimeType || 'application/octet-stream'
+        } as any);
+      }
+
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/mobile/leaverequest`,
         {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+            // Do not set Content-Type, FormData sets it automatically with boundary
             Accept: "application/json",
           },
-          body: JSON.stringify({
-            studentId,
-            title: title.trim(),
-            message: message.trim(),
-            reason: reason.trim(),
-            startDate: startDate.toISOString().split("T")[0],
-            endDate: endDate.toISOString().split("T")[0],
-          }),
+          body: formData,
         }
       );
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data?.error || "Error al registrar la licencia");
       }
-      // Reset form
+
       setTitle("");
       setMessage("");
       setReason("");
-      setStudentId(null);
-      setSelectedStudent(null);
+      if (userRole !== 'STUDENT') {
+        setStudentId(null);
+        setSelectedStudent(null);
+      }
       setStartDate(new Date());
       setEndDate(new Date());
+      setEvidenceFile(null);
       Alert.alert("Éxito", "Licencia registrada correctamente");
-      // Navigate back to list
       router.replace("(drawer)/(licences)/licencias");
+
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Error desconocido";
       setError(errorMsg);
@@ -206,7 +251,7 @@ const Register = () => {
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <View className="p-4 space-y-4">
+      <View className="p-4 space-y-4 shadow-sm">
         {error && (
           <View className="bg-red-50 border border-red-200 rounded-lg p-3">
             <Text className="text-red-700 text-sm">{error}</Text>
@@ -214,44 +259,45 @@ const Register = () => {
         )}
 
         {/* Student Selection */}
-        <View>
-          <Text className="text-sm font-medium text-gray-700 mb-2">Estudiante *</Text>
-          <TouchableOpacity
-            className={`bg-white border rounded-lg p-3 flex-row justify-between items-center ${
-              validationErrors.student ? "border-red-300" : "border-gray-300"
-            }`}
-            onPress={() => setShowStudentDropdown(!showStudentDropdown)}
-          >
-            <Text className={selectedStudent ? "text-gray-900" : "text-gray-500"}>
-              {selectedStudent
-                ? `${selectedStudent.firstName} ${selectedStudent.lastName} - ${selectedStudent.course} ${selectedStudent.parallel}`
-                : "Seleccionar estudiante"}
-            </Text>
-            <Ionicons
-              name={showStudentDropdown ? "chevron-up" : "chevron-down"}
-              size={20}
-              color={colors.gray[500]}
-            />
-          </TouchableOpacity>
-          {validationErrors.student && (
-            <Text className="text-red-500 text-xs mt-1">{validationErrors.student}</Text>
-          )}
-          {showStudentDropdown && (
-            <View className="bg-white border border-gray-300 border-t-0 rounded-b-lg max-h-64">
-              {students.map((student) => (
-                <TouchableOpacity
-                  key={student.id}
-                  className="border-b border-gray-200 p-3"
-                  onPress={() => selectStudent(student)}
-                >
-                  <Text className="text-gray-900">
-                    {student.firstName} {student.lastName} - {student.course} {student.parallel}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
+        {userRole !== 'STUDENT' && (
+          <View>
+            <Text className="text-sm font-medium text-gray-700 mb-2">Estudiante *</Text>
+            <TouchableOpacity
+              className={`bg-white border rounded-lg p-3 flex-row justify-between items-center ${validationErrors.student ? "border-red-300" : "border-gray-300"
+                }`}
+              onPress={() => setShowStudentDropdown(!showStudentDropdown)}
+            >
+              <Text className={selectedStudent ? "text-gray-900" : "text-gray-500"}>
+                {selectedStudent
+                  ? `${selectedStudent.firstName} ${selectedStudent.lastName} - ${selectedStudent.course} ${selectedStudent.parallel}`
+                  : "Seleccionar estudiante"}
+              </Text>
+              <Ionicons
+                name={showStudentDropdown ? "chevron-up" : "chevron-down"}
+                size={20}
+                color={colors.gray[500]}
+              />
+            </TouchableOpacity>
+            {validationErrors.student && (
+              <Text className="text-red-500 text-xs mt-1">{validationErrors.student}</Text>
+            )}
+            {showStudentDropdown && (
+              <View className="bg-white border border-gray-300 border-t-0 rounded-b-lg max-h-64">
+                {students.map((student) => (
+                  <TouchableOpacity
+                    key={student.id}
+                    className="border-b border-gray-200 p-3"
+                    onPress={() => selectStudent(student)}
+                  >
+                    <Text className="text-gray-900">
+                      {student.firstName} {student.lastName} - {student.course} {student.parallel}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Title */}
         <View>
@@ -262,9 +308,8 @@ const Register = () => {
             </Text>
           </View>
           <TextInput
-            className={`bg-white border rounded-lg p-3 text-gray-900 ${
-              validationErrors.title ? "border-red-300" : "border-gray-300"
-            }`}
+            className={`bg-white border rounded-lg p-3 text-gray-900 ${validationErrors.title ? "border-red-300" : "border-gray-300"
+              }`}
             placeholder="Mín. 5 caracteres"
             value={title}
             onChangeText={setTitle}
@@ -285,9 +330,8 @@ const Register = () => {
             </Text>
           </View>
           <TextInput
-            className={`bg-white border rounded-lg p-3 text-gray-900 ${
-              validationErrors.message ? "border-red-300" : "border-gray-300"
-            }`}
+            className={`bg-white border rounded-lg p-3 text-gray-900 ${validationErrors.message ? "border-red-300" : "border-gray-300"
+              }`}
             placeholder="Mín. 10 caracteres"
             value={message}
             onChangeText={setMessage}
@@ -311,9 +355,8 @@ const Register = () => {
             </Text>
           </View>
           <TextInput
-            className={`bg-white border rounded-lg p-3 text-gray-900 ${
-              validationErrors.reason ? "border-red-300" : "border-gray-300"
-            }`}
+            className={`bg-white border rounded-lg p-3 text-gray-900 ${validationErrors.reason ? "border-red-300" : "border-gray-300"
+              }`}
             placeholder="Mín. 5 caracteres"
             value={reason}
             onChangeText={setReason}
@@ -393,13 +436,31 @@ const Register = () => {
           )}
         </View>
 
+        {/* File Picker Section */}
+        <View className="mt-2">
+          <Text className="text-sm font-medium text-gray-700 mb-2">Evidencia (📸 Imagen / PDF)</Text>
+          <TouchableOpacity
+            className="bg-white border border-dashed border-primary-500 rounded-lg p-4 flex-row items-center justify-center space-x-2"
+            onPress={pickDocument}
+          >
+            <Ionicons name="cloud-upload-outline" size={24} color={colors.primary[500]} />
+            <Text className="text-primary-600 font-medium">
+              {evidenceFile ? evidenceFile.name : "Subir archivo (opcional)"}
+            </Text>
+          </TouchableOpacity>
+          {evidenceFile && (
+            <TouchableOpacity className="mt-2 self-center" onPress={() => setEvidenceFile(null)}>
+              <Text className="text-red-500 text-sm">Eliminar archivo adjunto</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Submit Button */}
         <TouchableOpacity
-          className={`p-3 rounded-lg flex-row justify-center items-center mt-6 mb-4 ${
-            isLoading || !studentId
+          className={`p-3 rounded-lg flex-row justify-center items-center mt-6 mb-4 ${isLoading || !studentId
               ? "bg-gray-300"
               : "bg-primary-500"
-          }`}
+            }`}
           onPress={handleSubmit}
           disabled={isLoading || !studentId}
         >
@@ -411,9 +472,5 @@ const Register = () => {
     </ScrollView>
   );
 };
+
 export default Register;
-
-
-
-MONDONGOOOOOOOOOOOOOOOOOOOO
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA

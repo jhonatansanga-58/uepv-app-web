@@ -126,6 +126,7 @@ model LeaveRequest {
   endDate         DateTime?
   message         String
   rejectionReason String?
+  evidenceUrl     String?
   startDate       DateTime?
   title           String
   tutorId         Int

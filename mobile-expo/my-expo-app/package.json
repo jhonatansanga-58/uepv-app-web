@@ -2,8 +2,8 @@
   "name": "my-expo-app",
   "version": "1.0.0",
   "scripts": {
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "start": "expo start",
     "prebuild": "expo prebuild",
     "lint": "eslint \"**/*.{js,jsx,ts,tsx}\" && prettier -c \"**/*.{js,jsx,ts,tsx,json}\"",
@@ -20,6 +20,7 @@
     "expo": "^54.0.0",
     "expo-constants": "~18.0.10",
     "expo-dev-client": "~6.0.18",
+    "expo-document-picker": "~14.0.8",
     "expo-linking": "~8.0.8",
     "expo-router": "~6.0.14",
     "expo-secure-store": "^15.0.7",

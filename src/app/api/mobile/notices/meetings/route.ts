@@ -56,13 +56,7 @@ export async function GET(request: NextRequest) {
       case Role.TUTOR:
         const tutorMeetings = await prisma.meeting.findMany({
           where: {
-            student: {
-              tutorships: {
-                some: {
-                  tutorId: userId
-                }
-              }
-            },
+            student: { tutorships: { some: { tutorId: userId } } },
             active: true
           },
           include: {
@@ -70,44 +64,49 @@ export async function GET(request: NextRequest) {
             student: {
               include: {
                 user: true,
-                courseParallel: {
-                  include: {
-                    course: true,
-                    parallel: true
-                  }
-                }
+                enrollments: { include: { courseParallel: { include: { course: true, parallel: true } } } }
               }
             },
           }
         });
+        
+        const mappedTutorMeetings = tutorMeetings.map((m: any) => ({
+           ...m,
+           student: {
+              ...m.student,
+              courseParallel: m.student.enrollments?.[0]?.courseParallel || null
+           }
+        }));
+
         return new NextResponse(
-          JSON.stringify(tutorMeetings),
+          JSON.stringify(mappedTutorMeetings),
           { status: 200, headers: corsHeaders }
         );
 
       case Role.STUDENT:
         const studentMeetings = await prisma.meeting.findMany({
-          where: {
-            studentId: userId,
-            active: true
-          },
+          where: { studentId: userId, active: true },
           include: {
             user: true,
             student: {
               include: {
                 user: true,
-                courseParallel: {
-                  include: {
-                    course: true,
-                    parallel: true
-                  }
-                }
+                enrollments: { include: { courseParallel: { include: { course: true, parallel: true } } } }
               }
             },
           }
         });
+
+        const mappedStudentMeetings = studentMeetings.map((m: any) => ({
+           ...m,
+           student: {
+              ...m.student,
+              courseParallel: m.student.enrollments?.[0]?.courseParallel || null
+           }
+        }));
+
         return new NextResponse(
-          JSON.stringify(studentMeetings),
+          JSON.stringify(mappedStudentMeetings),
           { status: 200, headers: corsHeaders }
         );
 

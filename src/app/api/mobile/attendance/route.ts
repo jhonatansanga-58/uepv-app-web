@@ -73,13 +73,21 @@ export async function GET(req: NextRequest) {
       where,
       orderBy: { date: "desc" },
       include: {
-        student: { include: { user: true, courseParallel: { include: { course: true, parallel: true } } } },
+        student: { include: { user: true, enrollments: { where: { active: true }, include: { courseParallel: { include: { course: true, parallel: true } } } } } },
         user: { select: { id: true, firstName: true, lastName: true } },
       },
     });
+    
+    const mappedAttendances = attendances.map((a: any) => ({
+       ...a,
+       student: {
+          ...a.student,
+          courseParallel: a.student?.enrollments?.[0]?.courseParallel || null
+       }
+    }));
 
     return new NextResponse(
-      JSON.stringify(attendances),
+      JSON.stringify(mappedAttendances),
       { status: 200, headers: corsHeaders }
     );
   } catch (error) {

@@ -36,11 +36,10 @@ def compute_match_score(probe_bytes, candidate_bytes):
         flann = cv2.FlannBasedMatcher(index_params, search_params)
         matches = flann.knnMatch(des1, des2, k=2)
 
-        # Ratio Test de Lowe mucho más estricto (0.65 en vez de 0.75) 
-        # Esto destruye los falsos positivos por manchas o bordes del cristal circular
+        # Ratio Test de Lowe equilibrado a 0.70 
         good_matches = []
         for m, n in matches:
-            if m.distance < 0.65 * n.distance:
+            if m.distance < 0.70 * n.distance:
                 good_matches.append(m)
 
         return len(good_matches)
@@ -62,7 +61,7 @@ def verify():
         
         best_id = None
         highest_score = 0
-        THRESHOLD = 35 # Umbral muy estricto para evitar suplantaciones de fondo transparente
+        THRESHOLD = 12 # Reducido a 12 para permitir rotaciones leves o diferencias de presión
 
         for candidate in candidates:
             templates = candidate.get("templates", [])

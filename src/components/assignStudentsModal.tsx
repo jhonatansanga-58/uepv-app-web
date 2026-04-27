@@ -116,7 +116,7 @@ export default function AssignStudentsModal({
               </div>
 
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium">Sugerencias</h3>
+                <h3 className="text-sm font-medium">Disponibles</h3>
                 <Badge>{filteredAvailable.length}</Badge>
               </div>
 
@@ -162,11 +162,11 @@ export default function AssignStudentsModal({
                 </ListGroup>
               </div>
 
-              <div className="mt-3">
+              {/* <div className="mt-3">
                 <Button size="sm" color="warning" onClick={clearAssigned} outline>
                   Vaciar
                 </Button>
-              </div>
+              </div> */}
             </div>
           </div>
         )}

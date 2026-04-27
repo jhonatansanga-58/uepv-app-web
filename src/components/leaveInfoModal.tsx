@@ -20,6 +20,7 @@ type LeaveDetail = {
   status: string;
   active: boolean;
   rejectionReason?: string | null;
+  evidenceUrl?: string | null;
   student: {
     id: number;
     user: { firstName: string; lastName: string; email?: string };
@@ -93,6 +94,21 @@ export default function LeaveInfoModal({ id: id, open: open, onClose, isAdmin, o
                 <p className="mt-1 text-gray-800">{leave.message}</p>
                 <p className="mt-3"><strong>Motivo:</strong></p>
                 <p className="mt-1 text-gray-800">{leave.reason}</p>
+                
+                {leave.evidenceUrl && (
+                  <div className="mt-3">
+                    <p><strong>Evidencia adjunta:</strong></p>
+                    <a 
+                      href={leave.evidenceUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="inline-block mt-2 px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded hover:bg-blue-200 transition-colors"
+                    >
+                      📄 Ver / Descargar archivo
+                    </a>
+                  </div>
+                )}
+
                 {leave.status === 'REJECTED' && (
                   <div className="mt-3">
                     <p><strong>Razón de rechazo:</strong></p>

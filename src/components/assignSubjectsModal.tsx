@@ -98,7 +98,7 @@ export default function AssignSubjectsModal({
             {/* Left: suggestions (no search needed for ~15 subjects) */}
             <div className="border rounded-2xl p-3">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium">Sugerencias</h3>
+                <h3 className="text-sm font-medium">Disponibles</h3>
                 <Badge>{available.length}</Badge>
               </div>
 
@@ -144,11 +144,11 @@ export default function AssignSubjectsModal({
                 </ListGroup>
               </div>
 
-              <div className="mt-3">
+              {/* <div className="mt-3">
                 <Button size="sm" color="warning" onClick={clearAssigned} outline>
                   Vaciar
                 </Button>
-              </div>
+              </div> */}
             </div>
           </div>
         )}

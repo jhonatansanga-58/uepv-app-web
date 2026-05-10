@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { useState, useEffect } from "react";
 import {
   Label,
   TextInput,
@@ -17,49 +17,53 @@ import { HiClipboardCopy } from "react-icons/hi";
 import FingerprintScanner from "@/components/FingerprintScanner";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-// Define types for your data
-interface Course {
-  id: number;
-  name: string;
-}
-interface Parallel {
-  id: number;
-  name: string;
-}
-interface Tutor {
-  id: number;
-  firstName: string;
-  lastName: string;
-}
+const studentSchema = z.object({
+  firstName: z.string().min(2, "Mínimo 2 caracteres").regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras").max(50, "Máximo 50 caracteres"),
+  lastName: z.string().min(2, "Mínimo 2 caracteres").regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras").max(50, "Máximo 50 caracteres"),
+  email: z.string().email("Correo electrónico inválido"),
+  phone: z.string().regex(/^\d+$/, "Solo dígitos numéricos").optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  birthDate: z.string().min(1, "Seleccione la fecha de nacimiento"),
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]),
+  courseId: z.string().min(1, "Seleccione un curso"),
+  parallelId: z.string().min(1, "Seleccione un paralelo"),
+  tutorId: z.string().optional().or(z.literal("")),
+}).refine(data => {
+   if(!data.birthDate) return true;
+   const d = new Date(data.birthDate);
+   const age = new Date().getFullYear() - d.getFullYear();
+   return age >= 3 && age <= 22;
+}, {
+   message: "El estudiante debe tener entre 3 y 22 años",
+   path: ["birthDate"]
+});
 
-interface FormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  birthDate: string;
-  gender: string;
-  courseId: string;
-  parallelId: string;
-  tutorId: string;
-  fingerprintBase64?: string;
-}
+type StudentFormValues = z.infer<typeof studentSchema>;
+
+interface Course { id: number; name: string; }
+interface Parallel { id: number; name: string; }
+interface Tutor { id: number; firstName: string; lastName: string; }
 
 export default function CreateStudentForm() {
-  const [formData, setFormData] = useState<FormData>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    birthDate: "",
-    gender: "",
-    courseId: "",
-    parallelId: "",
-    tutorId: "",
-    fingerprintBase64: "",
+  const { register, handleSubmit, formState: { errors }, reset, control, watch } = useForm<StudentFormValues>({
+    resolver: zodResolver(studentSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      address: "",
+      birthDate: "",
+      // @ts-ignore
+      gender: "",
+      courseId: "",
+      parallelId: "",
+      tutorId: "",
+    }
   });
 
   const [courses, setCourses] = useState<Course[]>([]);
@@ -67,44 +71,28 @@ export default function CreateStudentForm() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [scannerResetKey, setScannerResetKey] = useState<number>(0);
   const [credentialsData, setCredentialsData] = useState<{userName: string, rawPassword: string} | null>(null);
+  
+  const [fingerprintBase64, setFingerprintBase64] = useState("");
+
+  const selectedCourseId = watch("courseId");
 
   useEffect(() => {
-    fetch("/api/courses")
-      .then((res) => res.json())
-      .then(setCourses);
-    fetch("/api/tutors")
-      .then((res) => res.json())
-      .then(setTutors);
+    fetch("/api/courses").then((res) => res.json()).then(setCourses);
+    fetch("/api/tutors").then((res) => res.json()).then(setTutors);
   }, []);
 
   useEffect(() => {
-    if (!formData.courseId) return;
+    if (!selectedCourseId) return;
 
-    fetch(`/api/courses/${formData.courseId}/parallels`)
+    fetch(`/api/courses/${selectedCourseId}/parallels`)
       .then((res) => res.json())
       .then((data) => setParallels(data))
       .catch((err) => console.error("Error cargando paralelos:", err));
-  }, [formData.courseId]);
+  }, [selectedCourseId]);
 
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleDateChange = (date: Date | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      birthDate: date ? date.toISOString().split("T")[0] : "",
-    }));
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!formData.fingerprintBase64) {
-      toast.warning("Debe completar el enrolamiento de las 4 huellas biométricas primero.");
+  const onSubmit = async (data: StudentFormValues) => {
+    if (!fingerprintBase64) {
+      toast.warning("Debe completar el enrolamiento biométrico.");
       return;
     }
 
@@ -112,47 +100,29 @@ export default function CreateStudentForm() {
       const res = await fetch("/api/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...data, fingerprintBase64 }),
       });
 
       if (res.ok) {
-        toast.success("Estudiante y Huella registrados con éxito.");
-        setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          phone: "",
-          address: "",
-          birthDate: "",
-          gender: "",
-          courseId: "",
-          parallelId: "",
-          tutorId: "",
-          fingerprintBase64: "", // Limpiar estado de huella
-        });
+        toast.success("Estudiante registrado con éxito.");
+        reset();
+        setFingerprintBase64(""); 
         
-        // Mostrar credenciales generadas
         const responseData = await res.json();
         if (responseData.user?.userName && responseData.rawPassword) {
             setCredentialsData({ userName: responseData.user.userName, rawPassword: responseData.rawPassword });
         }
 
-        // Al forzar el cambio de la clave (key), React destruye por completo
-        // el componente FingerprintScanner y lo vuelve a montar, reiniciándolo.
         setScannerResetKey(prev => prev + 1);
         
       } else {
-        const data = await res.json();
-        toast.error("Error: " + (data.error || "Operación fallida en la base de datos"));
+        const errData = await res.json();
+        toast.error("Error: " + (errData.error || "Operación fallida"));
       }
     } catch (error) {
-      toast.error("No se pudo conectar con el servidor.");
+      toast.error("Problema de red o servidor.");
     }
   };
-
-  const isFormFilled = 
-     formData.firstName && formData.lastName && formData.email 
-     && formData.courseId && formData.parallelId;
 
   return (
     <>
@@ -161,78 +131,73 @@ export default function CreateStudentForm() {
       <Card className="max-w-4xl mx-auto my-8">
         <form
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit as any)}
         >
           <div>
             <Label>Nombre</Label>
             <TextInput
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              required
+              {...register("firstName")}
             />
+            {errors.firstName && <span className="text-red-500 text-sm">{errors.firstName.message}</span>}
           </div>
           <div>
             <Label>Apellido</Label>
             <TextInput
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              required
+              {...register("lastName")}
             />
+            {errors.lastName && <span className="text-red-500 text-sm">{errors.lastName.message}</span>}
           </div>
           <div>
             <Label>Email</Label>
             <TextInput
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
+              {...register("email")}
               type="email"
-              required
             />
+            {errors.email && <span className="text-red-500 text-sm">{errors.email.message}</span>}
           </div>
           <div>
             <Label>Teléfono</Label>
             <TextInput
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
+              {...register("phone")}
             />
+            {errors.phone && <span className="text-red-500 text-sm">{errors.phone.message}</span>}
           </div>
           <div>
             <Label>Dirección</Label>
             <TextInput
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
+              {...register("address")}
             />
+            {errors.address && <span className="text-red-500 text-sm">{errors.address.message}</span>}
           </div>
           <div>
             <Label>Fecha de nacimiento</Label>
-            <Datepicker
-              value={
-                formData.birthDate ? new Date(formData.birthDate) : undefined
-              }
-              onChange={handleDateChange}
+            <Controller
+               control={control}
+               name="birthDate"
+               render={({ field }) => (
+                 <Datepicker
+                   value={field.value ? new Date(field.value) : undefined}
+                   onChange={(date) => field.onChange(date ? date.toISOString().split("T")[0] : "")}
+                 />
+               )}
             />
+            {errors.birthDate && <span className="text-red-500 text-sm">{errors.birthDate.message}</span>}
           </div>
           <div>
             <Label>Género</Label>
-            <Select name="gender" value={formData.gender} onChange={handleChange}>
+            <Select {...register("gender")}>
               <option value="">Seleccione...</option>
               <option value="MALE">Masculino</option>
               <option value="FEMALE">Femenino</option>
               <option value="OTHER">Otro</option>
             </Select>
+            {errors.gender && <span className="text-red-500 text-sm">{errors.gender.message}</span>}
           </div>
 
           <div>
             <Label>Curso</Label>
             <Select
-              name="courseId"
-              value={formData.courseId}
-              onChange={handleChange}
-              required
+              {...register("courseId")}
             >
               <option value="">Seleccione...</option>
               {courses.map((c) => (
@@ -241,14 +206,12 @@ export default function CreateStudentForm() {
                 </option>
               ))}
             </Select>
+            {errors.courseId && <span className="text-red-500 text-sm">{errors.courseId.message}</span>}
           </div>
           <div>
             <Label>Paralelo</Label>
             <Select
-              name="parallelId"
-              value={formData.parallelId}
-              onChange={handleChange}
-              required
+              {...register("parallelId")}
             >
               <option value="">Seleccione...</option>
               {parallels.map((p) => (
@@ -257,13 +220,12 @@ export default function CreateStudentForm() {
                 </option>
               ))}
             </Select>
+            {errors.parallelId && <span className="text-red-500 text-sm">{errors.parallelId.message}</span>}
           </div>
           <div className="md:col-span-2">
             <Label>Tutor</Label>
             <Select
-              name="tutorId"
-              value={formData.tutorId}
-              onChange={handleChange}
+              {...register("tutorId")}
             >
               <option value="">Sin tutor asignado</option>
               {tutors.map((t) => (
@@ -272,6 +234,7 @@ export default function CreateStudentForm() {
                 </option>
               ))}
             </Select>
+            {errors.tutorId && <span className="text-red-500 text-sm">{errors.tutorId.message}</span>}
           </div>
           
           <div className="md:col-span-2 mt-4">
@@ -279,7 +242,7 @@ export default function CreateStudentForm() {
             <FingerprintScanner 
               key={scannerResetKey} 
               onCapture={(base64) => {
-                 setFormData(prev => ({ ...prev, fingerprintBase64: base64 }));
+                 setFingerprintBase64(base64);
               }} 
             />
           </div>
@@ -287,9 +250,8 @@ export default function CreateStudentForm() {
           <div className="md:col-span-2 text-right mt-6">
             <Button 
                 type="submit" 
-                disabled={!isFormFilled || !formData.fingerprintBase64}
                 className="ml-auto"
-                color={!isFormFilled || !formData.fingerprintBase64 ? "light" : "blue"}
+                color="blue"
             >
               Registrar estudiante
             </Button>

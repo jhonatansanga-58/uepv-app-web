@@ -5,16 +5,33 @@ import { Button, Card, Label, Select, TextInput, Modal, ModalHeader, ModalBody, 
 import AssignStudentsModal from "@/components/assignStudentsModal";
 import AssignSubjectsModal from "@/components/assignSubjectsModal";
 import { HiClipboardCopy } from "react-icons/hi";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const userSchema = z.object({
+  firstName: z.string().min(2, "Mínimo 2 caracteres").regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras").max(50, "Máximo 50 caracteres"),
+  lastName: z.string().min(2, "Mínimo 2 caracteres").regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras").max(50, "Máximo 50 caracteres"),
+  email: z.string().email("Correo electrónico inválido"),
+  phone: z.string().regex(/^\d{7,10}$/, "Debe contener entre 7 y 10 dígitos numéricos").optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  role: z.enum(["ADMIN", "TEACHER", "TUTOR"])
+});
+
+type UserFormValues = z.infer<typeof userSchema>;
 
 export default function CreateUserPage() {
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    role: "",
-    phone: "",
-    address: "",
-    active: true,
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<UserFormValues>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      address: "",
+      // @ts-ignore
+      role: "",
+    }
   });
 
   const [openStudents, setOpenStudents] = useState(false);
@@ -28,26 +45,7 @@ export default function CreateUserPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-
-    if (e.target instanceof HTMLInputElement && e.target.type === "checkbox") {
-      setForm((prev) => ({
-        ...prev,
-        [name]: (e.target as HTMLInputElement).checked,
-      }));
-    } else {
-      setForm((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: UserFormValues) => {
     setLoading(true);
     setError("");
     setSuccess("");
@@ -56,31 +54,23 @@ export default function CreateUserPage() {
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...data, active: true }),
       });
 
-      const data = await res.json();
+      const resData = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Error al crear el usuario");
+        setError(resData.error || "Error al crear el usuario");
       } else {
         setSuccess("Usuario creado correctamente");
-        setForm({
-          firstName: "",
-          lastName: "",
-          email: "",
-          role: "",
-          phone: "",
-          address: "",
-          active: true,
-        });
+        reset();
 
-        setCreatedUserId(data.id);
-        setCreatedRole(data.role);
+        setCreatedUserId(resData.id);
+        setCreatedRole(resData.role);
         
         // Mostrar credenciales automáticamente
-        if(data.userName && data.rawPassword) {
-           setCredentialsData({ userName: data.userName, rawPassword: data.rawPassword });
+        if(resData.userName && resData.rawPassword) {
+           setCredentialsData({ userName: resData.userName, rawPassword: resData.rawPassword });
         }
       }
     } catch {
@@ -128,65 +118,55 @@ export default function CreateUserPage() {
       <Card className="max-w-4xl mx-auto my-8">
         <form
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit as any)}
         >
           <div>
             <Label>Nombre</Label>
             <TextInput
-              name="firstName"
-              value={form.firstName}
-              onChange={handleChange}
-              required
+              {...register("firstName")}
             />
+            {errors.firstName && <span className="text-red-500 text-sm">{errors.firstName.message}</span>}
           </div>
           <div>
             <Label>Apellido</Label>
             <TextInput
-              name="lastName"
-              value={form.lastName}
-              onChange={handleChange}
-              required
+              {...register("lastName")}
             />
+            {errors.lastName && <span className="text-red-500 text-sm">{errors.lastName.message}</span>}
           </div>
           <div>
             <Label>Email</Label>
             <TextInput
-              name="email"
-              value={form.email}
-              onChange={handleChange}
+              {...register("email")}
               type="email"
-              required
             />
+            {errors.email && <span className="text-red-500 text-sm">{errors.email.message}</span>}
           </div>
           <div>
             <Label>Teléfono</Label>
             <TextInput
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
+              {...register("phone")}
             />
+            {errors.phone && <span className="text-red-500 text-sm">{errors.phone.message}</span>}
           </div>
           <div>
             <Label>Dirección</Label>
             <TextInput
-              name="address"
-              value={form.address}
-              onChange={handleChange}
+              {...register("address")}
             />
+            {errors.address && <span className="text-red-500 text-sm">{errors.address.message}</span>}
           </div>
           <div>
             <Label>Rol</Label>
             <Select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              required
+              {...register("role")}
             >
               <option value="">Seleccione...</option>
               <option value="ADMIN">Administrador</option>{" "}
               <option value="TEACHER">Docente</option>
               <option value="TUTOR">Padre</option>
             </Select>
+            {errors.role && <span className="text-red-500 text-sm">{errors.role.message}</span>}
           </div>
 
           <div className="md:col-span-2 text-right">

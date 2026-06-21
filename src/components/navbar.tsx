@@ -9,9 +9,13 @@ import {
 } from "flowbite-react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { HiUserCircle } from "react-icons/hi";
+import { HiUserCircle, HiMenu } from "react-icons/hi";
 
-export function NavBarComponent() {
+interface NavBarProps {
+  onToggleSidebar?: () => void;
+}
+
+export function NavBarComponent({ onToggleSidebar }: NavBarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
 
@@ -56,33 +60,39 @@ export function NavBarComponent() {
       fluid
       className="bg-primary-900 border-b border-gray-200 shadow-sm px-6"
     >
-      <NavbarBrand href="#">
-        <span className="self-center whitespace-nowrap text-xl font-semibold text-gray-100">
-          {getNavbarText()}
-        </span>
-      </NavbarBrand>
+      <div className="flex items-center gap-2">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="p-2 rounded-lg text-gray-100 hover:bg-primary-800 md:hidden focus:outline-none focus:ring-2 focus:ring-primary-300 transition-colors"
+            aria-label="Toggle sidebar"
+          >
+            <HiMenu className="w-6 h-6" />
+          </button>
+        )}
+        <NavbarBrand href="#">
+          <span className="self-center whitespace-nowrap text-lg sm:text-xl font-semibold text-gray-100">
+            {getNavbarText()}
+          </span>
+        </NavbarBrand>
+      </div>
 
-      {/* Toggle móvil (se puede eliminar si no es necesario) */}
-      <NavbarToggle />
-
-      {/* Datos del usuario */}
-      <NavbarCollapse>
-        <NavbarLink href="" className="flex items-center gap-2">
-          <div className="flex flex-col text-right leading-tight">
-            <span className="text-lg font-medium text-gray-200">
-              {session?.user?.name ?? 'Cargando...'}
-            </span>
-            <span className="text-md text-gray-300">
-              {session?.user?.role === 'ADMIN' ? 'Administrador' :
-                session?.user?.role === 'TEACHER' ? 'Profesor' :
-                  session?.user?.role === 'TUTOR' ? 'Tutor' :
-                    session?.user?.role === 'STUDENT' ? 'Estudiante' :
-                      'Cargando...'}
-            </span>
-          </div>
-          <HiUserCircle className="w-11 h-11 text-white" />
-        </NavbarLink>
-      </NavbarCollapse>
+      {/* Datos del usuario - Alineados a la derecha */}
+      <div className="flex items-center gap-2">
+        <div className="hidden sm:flex flex-col text-right leading-tight">
+          <span className="text-sm font-medium text-gray-200">
+            {session?.user?.name ?? 'Cargando...'}
+          </span>
+          <span className="text-xs text-gray-300">
+            {session?.user?.role === 'ADMIN' ? 'Administrador' :
+              session?.user?.role === 'TEACHER' ? 'Profesor' :
+                session?.user?.role === 'TUTOR' ? 'Tutor' :
+                  session?.user?.role === 'STUDENT' ? 'Estudiante' :
+                    'Cargando...'}
+          </span>
+        </div>
+        <HiUserCircle className="w-9 h-9 sm:w-10 sm:h-10 text-white" />
+      </div>
     </Navbar>
   );
 }

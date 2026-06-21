@@ -39,14 +39,18 @@ export default function LandingPage() {
       {/* NAVBAR */}
       <Navbar fluid rounded className="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100">
         <NavbarBrand href="/">
-          <img src="/escudo.png" className="mr-3 h-10 sm:h-12" alt="Escudo Institucional" />
-          <span className="self-center whitespace-nowrap text-xl font-bold text-[var(--color-primary-900)]">
+          <img src="/escudo.png" className="mr-2 h-9 sm:mr-3 sm:h-12" alt="Escudo Institucional" />
+          <span className="self-center whitespace-nowrap text-lg sm:text-xl font-bold text-[var(--color-primary-900)] sm:hidden">
+            UEPV
+          </span>
+          <span className="self-center whitespace-nowrap text-xl font-bold text-[var(--color-primary-900)] hidden sm:inline-block">
             Unidad Educativa
           </span>
         </NavbarBrand>
-        <div className="flex md:order-2 space-x-2">
-          <Button href="/login" className="bg-[var(--color-primary-900)] enabled:hover:bg-[var(--color-primary-800)] text-white shadow-md">
-            Portal Académico
+        <div className="flex md:order-2 space-x-2 items-center">
+          <Button href="/login" className="bg-[var(--color-primary-900)] enabled:hover:bg-[var(--color-primary-800)] text-white shadow-md text-sm sm:text-base font-semibold">
+            <span className="hidden min-[380px]:inline">Portal Académico</span>
+            <span className="min-[380px]:hidden">Portal</span>
           </Button>
           <NavbarToggle />
         </div>

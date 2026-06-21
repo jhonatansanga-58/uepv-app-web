@@ -10,9 +10,17 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   }
 } else {
   try {
-    serviceAccount = require('../../service-account.json');
+    const fs = require('fs');
+    const path = require('path');
+    const filePath = path.join(process.cwd(), 'service-account.json');
+    if (fs.existsSync(filePath)) {
+      const fileData = fs.readFileSync(filePath, 'utf8');
+      serviceAccount = JSON.parse(fileData);
+    } else {
+      console.warn("service-account.json not found locally.");
+    }
   } catch (err) {
-    console.warn("service-account.json not found and FIREBASE_SERVICE_ACCOUNT environment variable is missing.");
+    console.warn("Error reading service-account.json locally:", err.message);
   }
 }
 

@@ -3,7 +3,7 @@
 @source "../../.flowbite-react/class-list.json";
 
 /* Desactivar modo oscuro automático de Tailwind v4 y Flowbite */
-@variant dark (&:where(.dark, .dark *));
+@variant dark (.never-match-this-class-name);
 
 :root {
   --background: #ffffff;

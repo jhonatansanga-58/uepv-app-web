@@ -1,0 +1,9 @@
+# Ignorar carpetas del desarrollo móvil y servicios locales en Vercel
+mobile-expo/
+afis-service/
+
+# Carpetas de dependencias y temporales
+node_modules/
+.next/
+.vercel/
+.flowbite-react/

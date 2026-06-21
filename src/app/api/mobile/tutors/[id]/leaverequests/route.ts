@@ -21,9 +21,10 @@ export async function OPTIONS() {
   });
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const tutorId = parseInt(params.id, 10);
+    const { id: rawId } = await params;
+    const tutorId = parseInt(rawId, 10);
     if (Number.isNaN(tutorId)) return new NextResponse(
       JSON.stringify({ error: "Invalid tutor id" }),
       { status: 400, headers: corsHeaders }

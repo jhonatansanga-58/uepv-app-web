@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const tutorId = parseInt(params.id, 10);
+    const { id: rawId } = await params;
+    const tutorId = parseInt(rawId, 10);
     if (Number.isNaN(tutorId)) {
       return NextResponse.json({ error: "Invalid tutor id" }, { status: 400 });
     }

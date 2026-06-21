@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: Request, context: { params: { id: string } }) {
-  const studentId = parseInt(context.params.id, 10);
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = await context.params;
+  const studentId = parseInt(rawId, 10);
 
   if (isNaN(studentId)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
@@ -53,9 +54,10 @@ export async function GET(req: Request, context: { params: { id: string } }) {
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const id = parseInt(context.params.id, 10);
+  const { id: rawId } = await context.params;
+  const id = parseInt(rawId, 10);
   const data = await req.json();
 
   try {

@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 
-//export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    //const {id}= await context.params;
-    //const tutorId = parseInt(id, 10);
-    const tutorId = parseInt(params.id, 10);
+    const { id } = await params;
+    const tutorId = parseInt(id, 10);
     if (Number.isNaN(tutorId)) return NextResponse.json({ error: "Invalid tutor id" }, { status: 400 });
 
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });

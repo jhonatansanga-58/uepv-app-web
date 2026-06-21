@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { subjectId: string } }
+  { params }: { params: Promise<{ subjectId: string }> }
 ) {
   try {
     const token = await getToken({ req: request });
@@ -12,7 +12,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const subjectId = parseInt(params.subjectId);
+    const { subjectId: rawSubjectId } = await params;
+    const subjectId = parseInt(rawSubjectId);
 
     // Get all course-parallels where this subject is taught
     const courseSubjects = await prisma.courseSubject.findMany({

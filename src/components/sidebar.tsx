@@ -27,10 +27,10 @@ export function SideBarComponent() {
   };
 
   // Helper function to render colored icons dynamically based on active state
-  const getIcon = (isActive: boolean, IconComponent: any) => {
+  const getIcon = (isActive: boolean, IconComponent: any, extraClass: string = "") => {
     return () => (
       <IconComponent 
-        className={`${isActive ? "text-white!" : "text-primary-900! group-hover:text-primary-800!"} w-6 h-6 transition-colors`} 
+        className={`${isActive ? "text-white!" : "text-primary-900! group-hover:text-primary-800!"} w-6 h-6 ${extraClass} transition-colors`} 
       />
     );
   };
@@ -109,7 +109,8 @@ export function SideBarComponent() {
                     pathname === "/admin/academic-years" || 
                     pathname === "/admin/courses" || 
                     pathname === "/admin/subjects", 
-                    HiAcademicCap
+                    HiAcademicCap,
+                    "scale-125"
                   )}
                   label="Organización escolar"
                   open={pathname === "/admin/academic-years" || pathname === "/admin/courses" || pathname === "/admin/subjects"}

@@ -1,5 +1,4 @@
 import "../globals.css";
-import "../input.css";
 export const metadata = {
     title: "Iniciar sesión",
 };

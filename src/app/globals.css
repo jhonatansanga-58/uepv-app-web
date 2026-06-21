@@ -1,6 +1,11 @@
 @import "tailwindcss";
+@plugin "flowbite/plugin";
 @plugin "flowbite-react/plugin/tailwindcss";
+
+/* Scan all Flowbite and Flowbite React classes */
 @source "../../.flowbite-react/class-list.json";
+@source "../../node_modules/flowbite/**/*.js";
+@source "../../node_modules/flowbite-react/dist/**/*.js";
 
 /* Desactivar modo oscuro automático de Tailwind v4 y Flowbite */
 @variant dark (.never-match-this-class-name);

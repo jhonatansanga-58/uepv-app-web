@@ -5,7 +5,11 @@ import { prisma } from "@/lib/prisma";
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!token?.sub || !token?.role) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    if (token.role !== 'ADMIN') {
+      return NextResponse.json({ error: "Only administrators can delete attendance records" }, { status: 403 });
+    }
 
     const { id: rawId } = await params;
     const id = Number(rawId);

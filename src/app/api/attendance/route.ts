@@ -7,8 +7,18 @@ import { sendMulticast } from "@/utils/notifications";
 export async function POST(req: NextRequest) {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
     const body = await req.json();
+
+    // If NOT biometric flow, enforce authentication and role check (ADMIN/TEACHER only)
+    if (!body.probeBase64) {
+      if (!token?.sub || !token?.role) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (token.role !== 'ADMIN' && token.role !== 'TEACHER') {
+        return NextResponse.json({ error: "Only admins and teachers can manually register attendances" }, { status: 403 });
+      }
+    }
+
     let studentId = Number(body.studentId ?? body.student?.id);
 
     // 1. FLUJO BIOMÉTRICO (AFIS)
@@ -160,6 +170,11 @@ export async function POST(req: NextRequest) {
 // GET: get attendances by student and date range
 export async function GET(req: NextRequest) {
   try {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token?.sub || !token?.role) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const studentId = Number(searchParams.get("studentId") || "");
     const from = searchParams.get("from");

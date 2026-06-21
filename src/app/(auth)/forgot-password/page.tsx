@@ -4,6 +4,8 @@ import { Button, Card, Label, TextInput } from "flowbite-react";
 import { useState } from "react";
 import { HiMail } from "react-icons/hi";
 
+import { toast } from "react-toastify";
+
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -16,6 +18,16 @@ export default function ForgotPasswordPage() {
     setError("");
     setSuccess("");
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim() || !emailRegex.test(email)) {
+      const msg = "Por favor, ingresa un correo electrónico válido.";
+      setError(msg);
+      toast.error(msg);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
@@ -26,13 +38,19 @@ export default function ForgotPasswordPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Error al enviar la solicitud.");
+        const errorMsg = data.error || "Error al enviar la solicitud.";
+        setError(errorMsg);
+        toast.error(errorMsg);
       } else {
-        setSuccess(data.message);
+        const successMsg = data.message || "Enlace de recuperación enviado con éxito.";
+        setSuccess(successMsg);
+        toast.success("Se ha enviado el enlace de recuperación a tu correo electrónico.");
         setEmail("");
       }
     } catch {
-      setError("Ocurrió un error. Intenta de nuevo.");
+      const errorMsg = "Ocurrió un error de conexión. Intenta de nuevo.";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }

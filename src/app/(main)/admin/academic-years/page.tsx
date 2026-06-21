@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import AcademicYearCard from "@/components/academicYearCard";
 import AcademicYearActivateModal from "@/components/academicYearActivateModal";
+import { toast } from "react-toastify";
 
 interface AcademicYear {
   id: number;
@@ -49,22 +50,30 @@ export default function AcademicYearsPage() {
     data: { year: number }
   ) => {
     if (!data.year || data.year < 2000 || data.year > 2100) {
-      alert("Año inválido");
+      toast.error("El año académico es inválido.");
       return;
     }
 
     if (id < 0) {
-      // Create new academic year
-      const res = await fetch("/api/academic-years", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ year: data.year }),
-      });
-      if (res.ok) {
+      try {
+        // Create new academic year
+        const res = await fetch("/api/academic-years", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ year: data.year }),
+        });
+        const resData = await res.json();
+        if (res.ok) {
+          toast.success(`¡La gestión académica ${data.year} se ha creado con éxito!`);
+          fetchAcademicYears();
+        } else {
+          toast.error(resData.error || "Error al crear la gestión académica.");
+          // If it fails, reload anyway to remove the temp item
+          fetchAcademicYears();
+        }
+      } catch (err) {
+        toast.error("Error de red al guardar la nueva gestión académica.");
         fetchAcademicYears();
-      } else {
-        const err = await res.json();
-        alert(err.error || "Error creando");
       }
     }
   };

@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { Navbar, NavbarBrand, NavbarToggle, NavbarCollapse, NavbarLink, Button, Footer, FooterBrand, FooterLinkGroup, FooterLink, FooterDivider, FooterCopyright } from "flowbite-react";
 import { HiCheck, HiPlay, HiLocationMarker, HiPhone, HiMail } from "react-icons/hi";
+import { useSession } from "next-auth/react";
 
 // Animación simple de Scroll con Intersection Observer
 const FadeInOnScroll = ({ children, delay = 0 }: { children: React.ReactNode, delay?: number }) => {
@@ -34,6 +35,9 @@ const FadeInOnScroll = ({ children, delay = 0 }: { children: React.ReactNode, de
 };
 
 export default function LandingPage() {
+  const { status } = useSession();
+  const portalHref = status === "authenticated" ? "/dashboard" : "/login";
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 font-sans">
       {/* NAVBAR */}
@@ -48,7 +52,7 @@ export default function LandingPage() {
           </span>
         </NavbarBrand>
         <div className="flex md:order-2 space-x-2 items-center">
-          <Button href="/login" className="bg-[var(--color-primary-900)] enabled:hover:bg-[var(--color-primary-800)] text-white shadow-md text-sm sm:text-base font-semibold">
+          <Button href={portalHref} className="bg-[var(--color-primary-900)] enabled:hover:bg-[var(--color-primary-800)] text-white shadow-md text-sm sm:text-base font-semibold">
             <span className="hidden min-[380px]:inline">Portal Académico</span>
             <span className="min-[380px]:hidden">Portal</span>
           </Button>
@@ -84,7 +88,7 @@ export default function LandingPage() {
               Formando líderes con valores y conocimientos sólidos. Descubre nuestra plataforma de gestión académica integral diseñada para conectar a padres, estudiantes y maestros.
             </p>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-              <Button href="/login" size="xl" className="bg-[var(--color-primary-900)] enabled:hover:bg-[var(--color-primary-800)] shadow-lg shadow-purple-900/20 w-full sm:w-auto">
+              <Button href={portalHref} size="xl" className="bg-[var(--color-primary-900)] enabled:hover:bg-[var(--color-primary-800)] shadow-lg shadow-purple-900/20 w-full sm:w-auto">
                 Ingresar al Sistema
               </Button>
               <Button color="light" size="xl" href="#nosotros" className="w-full sm:w-auto">

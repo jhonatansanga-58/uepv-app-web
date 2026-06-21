@@ -6,6 +6,8 @@ import { HiLockClosed } from "react-icons/hi";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 
+import { toast } from "react-toastify";
+
 export default function ForceChangePasswordPage() {
   const router = useRouter();
 
@@ -22,13 +24,21 @@ export default function ForceChangePasswordPage() {
     setSuccess("");
 
     if (newPassword !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      const msg = "Las contraseñas no coinciden.";
+      setError(msg);
+      toast.error(msg);
+      setNewPassword("");
+      setConfirmPassword("");
       setIsLoading(false);
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+    if (newPassword.length < 8) {
+      const msg = "La contraseña debe tener al menos 8 caracteres para cumplir con las políticas de seguridad.";
+      setError(msg);
+      toast.error(msg);
+      setNewPassword("");
+      setConfirmPassword("");
       setIsLoading(false);
       return;
     }
@@ -43,9 +53,16 @@ export default function ForceChangePasswordPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Error al actualizar la contraseña.");
+        const errorMsg = data.error || "Error al actualizar la contraseña.";
+        setError(errorMsg);
+        toast.error(errorMsg);
+        setNewPassword("");
+        setConfirmPassword("");
       } else {
         setSuccess("Contraseña actualizada con éxito. Inicia sesión nuevamente con la nueva clave.");
+        toast.success("¡Contraseña actualizada con éxito! Redirigiendo para iniciar sesión...");
+        setNewPassword("");
+        setConfirmPassword("");
         // Reforzamos cerrando la sesión sucia (que tenía la bandera forcePasswordChange encendida) 
         // para que entre limpiecito con la nueva
         setTimeout(() => {
@@ -53,7 +70,11 @@ export default function ForceChangePasswordPage() {
         }, 2500);
       }
     } catch {
-      setError("Ocurrió un error. Intenta de nuevo.");
+      const errorMsg = "Ocurrió un error de conexión. Intenta de nuevo.";
+      setError(errorMsg);
+      toast.error(errorMsg);
+      setNewPassword("");
+      setConfirmPassword("");
     } finally {
       setIsLoading(false);
     }

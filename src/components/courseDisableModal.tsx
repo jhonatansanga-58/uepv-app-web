@@ -7,6 +7,7 @@ import {
   Button,
 } from "flowbite-react";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 type Props = {
   id: number | null;
@@ -43,10 +44,12 @@ export default function CourseDisableModal({
         throw new Error(errorData.error || "Error al cambiar estado del curso");
       }
 
+      toast.success(active ? `¡El curso "${name}" ha sido deshabilitado con éxito!` : `¡El curso "${name}" ha sido habilitado con éxito!`);
       onUpdated(); // refresh list
       onClose(); // close modal
     } catch (err) {
-      console.error(err);
+      const errMsg = err instanceof Error ? err.message : "Error al cambiar estado del curso";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

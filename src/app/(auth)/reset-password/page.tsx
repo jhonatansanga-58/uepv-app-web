@@ -5,6 +5,8 @@ import { useState, Suspense } from "react";
 import { HiLockClosed } from "react-icons/hi";
 import { useSearchParams } from "next/navigation";
 
+import { toast } from "react-toastify";
+
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -32,13 +34,21 @@ function ResetPasswordForm() {
     setSuccess("");
 
     if (newPassword !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      const msg = "Las contraseñas no coinciden.";
+      setError(msg);
+      toast.error(msg);
+      setNewPassword("");
+      setConfirmPassword("");
       setIsLoading(false);
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+    if (newPassword.length < 8) {
+      const msg = "La contraseña debe tener al menos 8 caracteres para ser segura.";
+      setError(msg);
+      toast.error(msg);
+      setNewPassword("");
+      setConfirmPassword("");
       setIsLoading(false);
       return;
     }
@@ -53,12 +63,21 @@ function ResetPasswordForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Error al restablecer la contraseña.");
+        const errorMsg = data.error || "Error al restablecer la contraseña.";
+        setError(errorMsg);
+        toast.error(errorMsg);
+        setNewPassword("");
+        setConfirmPassword("");
       } else {
         setSuccess("Tu contraseña ha sido restablecida con éxito. Ya puedes iniciar sesión de forma segura.");
+        toast.success("Contraseña restablecida con éxito. Inicia sesión con tus nuevas credenciales.");
       }
     } catch {
-      setError("Ocurrió un error. Intenta de nuevo.");
+      const errorMsg = "Ocurrió un error de conexión. Intenta de nuevo.";
+      setError(errorMsg);
+      toast.error(errorMsg);
+      setNewPassword("");
+      setConfirmPassword("");
     } finally {
       setIsLoading(false);
     }

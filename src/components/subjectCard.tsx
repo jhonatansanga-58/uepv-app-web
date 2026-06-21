@@ -17,7 +17,7 @@ type Props = {
   onViewCourses: (id: number) => void;
 };
 
-export default function CourseCard({
+export default function SubjectCard({
   id,
   name,
   courses,
@@ -29,6 +29,7 @@ export default function CourseCard({
 }: Props) {
   const [isEditing, setIsEditing] = useState<boolean>(startEditing);
   const [editedName, setEditedName] = useState(name);
+  const [error, setError] = useState("");
 
   // Keep editedName in sync when name prop changes
   useEffect(() => {
@@ -41,6 +42,15 @@ export default function CourseCard({
   }, [startEditing]);
 
   const handleUpdate = () => {
+    setError("");
+    if (!editedName.trim()) {
+      setError("El nombre es obligatorio.");
+      return;
+    }
+    if (editedName.trim().length < 3) {
+      setError("Debe tener al menos 3 caracteres.");
+      return;
+    }
     onUpdate(id, {
       name: editedName,
     });
@@ -50,11 +60,13 @@ export default function CourseCard({
   const handleEditClick = () => {
     setEditedName(name);
     setIsEditing(true);
+    setError("");
   };
 
   const handleCancel = () => {
     setEditedName(name);
     setIsEditing(false);
+    setError("");
   };
 
   return (
@@ -63,15 +75,21 @@ export default function CourseCard({
     >
       <div className="flex items-center gap-4 w-1/2 px-6 py-4">
         <div className="text-lg w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold">
-          {name.charAt(0) || "C"}
+          {name.charAt(0) || "M"}
         </div>
         {isEditing ? (
-          <input
-            type="text"
-            value={editedName}
-            onChange={(e) => setEditedName(e.target.value)}
-            className="text-lg font-medium text-gray-800 border rounded px-2 py-1"
-          />
+          <div className="flex flex-col">
+            <input
+              type="text"
+              value={editedName}
+              onChange={(e) => {
+                setEditedName(e.target.value);
+                if (error) setError("");
+              }}
+              className="text-lg font-medium text-gray-800 border rounded px-2 py-1"
+            />
+            {error && <span className="text-red-500 text-xs mt-1">{error}</span>}
+          </div>
         ) : (
           <div className="text-lg font-medium text-gray-800">{name}</div>
         )}
@@ -141,4 +159,4 @@ export default function CourseCard({
       </div>
     </div>
   );
-};
+}

@@ -9,6 +9,7 @@ import UserEditModal from "@/components/userEditModal";
 import UserDisableModal from "@/components/userDisableModal";
 import AssignStudentsModal from "@/components/assignStudentsModal";
 import AssignSubjectsModal from "@/components/assignSubjectsModal";
+import { toast } from "react-toastify";
 
 const roleLabels: Record<User["role"], string> = {
   ADMIN: "Administrador",
@@ -222,13 +223,12 @@ export default function UsersPage() {
 
             const data = await res.json();
             if (!res.ok) {
-              console.error("Error assigning students:", data.error);
-              // You could add a toast notification here to show the error
+              toast.error(data.error || "Error al asignar estudiantes.");
             } else {
-              console.log("Students assigned successfully");
-              // You could add a success notification here
+              toast.success("¡Estudiantes asignados con éxito al tutor!");
             }
           } catch (error) {
+            toast.error("Error de red al asignar estudiantes.");
             console.error("Error assigning students:", error);
           }
         }}
@@ -248,13 +248,12 @@ export default function UsersPage() {
 
             const data = await res.json();
             if (!res.ok) {
-              console.error("Error assigning subjects:", data.error);
-              // You could add a toast notification here to show the error
+              toast.error(data.error || "Error al asignar materias.");
             } else {
-              console.log("Subjects assigned successfully");
-              // You could add a success notification here
+              toast.success("¡Materias asignadas con éxito al docente!");
             }
           } catch (error) {
+            toast.error("Error de red al asignar materias.");
             console.error("Error assigning subjects:", error);
           }
         }}

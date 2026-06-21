@@ -20,6 +20,7 @@ export default function AcademicYearCard({
 }: Props) {
   const [isEditing, setIsEditing] = useState<boolean>(startEditing);
   const [editedYear, setEditedYear] = useState<number>(year || new Date().getFullYear());
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setEditedYear(year);
@@ -30,6 +31,15 @@ export default function AcademicYearCard({
   }, [startEditing]);
 
   const handleUpdate = () => {
+    setError("");
+    if (!editedYear || isNaN(editedYear)) {
+      setError("El año es obligatorio.");
+      return;
+    }
+    if (editedYear < 2000 || editedYear > 2100) {
+      setError("El año debe estar entre 2000 y 2100.");
+      return;
+    }
     onUpdate(id, {
       year: editedYear,
     });
@@ -39,6 +49,7 @@ export default function AcademicYearCard({
   const handleCancel = () => {
     setEditedYear(year);
     setIsEditing(false);
+    setError("");
   };
 
   return (
@@ -52,14 +63,20 @@ export default function AcademicYearCard({
           Y
         </div>
         {isEditing ? (
-          <input
-            type="number"
-            value={editedYear}
-            onChange={(e) => setEditedYear(parseInt(e.target.value))}
-            className="text-lg font-medium text-gray-800 border rounded px-2 py-1"
-            min={2000}
-            max={2100}
-          />
+          <div className="flex flex-col">
+            <input
+              type="number"
+              value={editedYear || ""}
+              onChange={(e) => {
+                setEditedYear(parseInt(e.target.value));
+                if (error) setError("");
+              }}
+              className="text-lg font-medium text-gray-800 border rounded px-2 py-1"
+              min={2000}
+              max={2100}
+            />
+            {error && <span className="text-red-500 text-xs mt-1">{error}</span>}
+          </div>
         ) : (
           <div className="text-lg font-medium text-gray-800">{year}</div>
         )}

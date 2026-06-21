@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import SubjectCard from '@/components/subjectCard';
 import SubjectDisableModal from '@/components/subjectDisableModal';
 import AssignCoursesModal from '@/components/assignCoursesModal';
+import { toast } from 'react-toastify';
 
 interface Subject {
   id: number;
@@ -52,25 +53,48 @@ export default function SubjectsPage() {
     id: number,
     data: { name: string; }
   ) => {
-    if (!data.name.trim()) return;
+    if (!data.name.trim()) {
+      toast.error("El nombre de la materia es inválido.");
+      return;
+    }
     if (id < 0) {
-      // Create new Subject
-      const res = await fetch("/api/subjects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.name }),
-      });
-      if (res.ok) {
+      try {
+        // Create new Subject
+        const res = await fetch("/api/subjects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: data.name }),
+        });
+        const resData = await res.json();
+        if (res.ok) {
+          toast.success(`¡La materia "${data.name}" se ha creado con éxito!`);
+          fetchSubjects();
+        } else {
+          toast.error(resData.error || "Error al crear la materia.");
+          fetchSubjects();
+        }
+      } catch (err) {
+        toast.error("Error de red al crear la materia.");
         fetchSubjects();
       }
     } else {
-      // Update existing Subject
-      const res = await fetch(`/api/subjects/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: data.name }),
-      });
-      if (res.ok) {
+      try {
+        // Update existing Subject
+        const res = await fetch(`/api/subjects/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: data.name }),
+        });
+        const resData = await res.json();
+        if (res.ok) {
+          toast.success(`¡La materia "${data.name}" se ha actualizado con éxito!`);
+          fetchSubjects();
+        } else {
+          toast.error(resData.error || "Error al actualizar la materia.");
+          fetchSubjects();
+        }
+      } catch (err) {
+        toast.error("Error de red al actualizar la materia.");
         fetchSubjects();
       }
     }
@@ -126,14 +150,20 @@ export default function SubjectsPage() {
         onConfirmCourses={async (courseIds: number[]) => {
           if (!assignSubjectId) return;
           try {
-            await fetch(`/api/subjects/courses/${assignSubjectId}`, {
+            const res = await fetch(`/api/subjects/courses/${assignSubjectId}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ courseIds }),
             });
-            // refresh subjects to reflect changes
-            fetchSubjects();
+            const resData = await res.json();
+            if (res.ok) {
+              toast.success("¡Cursos asignados con éxito a la materia!");
+              fetchSubjects();
+            } else {
+              toast.error(resData.error || "Error al asignar los cursos.");
+            }
           } catch (err) {
+            toast.error("Error de red al asignar los cursos.");
             console.error('Error assigning courses', err);
           }
         }}

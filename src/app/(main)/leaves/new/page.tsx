@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Label, TextInput, Select, Textarea, Button, Alert, Card, Datepicker } from "flowbite-react";
+import { Label, TextInput, Select, Textarea, Button, Card, Datepicker } from "flowbite-react";
+import { toast } from "react-toastify";
 
 interface Student {
   id: string;
@@ -22,7 +23,7 @@ export default function NewLeavePage() {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [evidence, setEvidence] = useState<File | null>(null);
-  const [error, setError] = useState("");
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function NewLeavePage() {
         const data = await res.json();
         setStudents(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido");
+        toast.error(err instanceof Error ? err.message : "Error al cargar la lista de estudiantes.");
       }
     };
     fetchStudents();
@@ -44,15 +45,29 @@ export default function NewLeavePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setFormErrors({});
     setIsLoading(true);
+
+    // Client-side validations
+    const newErrors: Record<string, string> = {};
+    if (!studentId) newErrors.studentId = "Debe seleccionar un estudiante.";
+    if (!title.trim()) newErrors.title = "El título de la solicitud es obligatorio.";
+    if (!message.trim()) newErrors.message = "El mensaje detallado es obligatorio.";
+    if (!reason.trim()) newErrors.reason = "El motivo de la licencia es obligatorio.";
+    if (!startDate) newErrors.startDate = "La fecha de inicio es obligatoria.";
+    if (!endDate) newErrors.endDate = "La fecha de finalización es obligatoria.";
+    if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+      newErrors.endDate = "La fecha de fin no puede ser menor que la fecha de inicio.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
+      toast.error("Por favor, rellena todos los campos obligatorios correctamente.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      if (!studentId || !title || !message || !reason || !startDate || !endDate) {
-        setError("Todos los campos con * son obligatorios");
-        setIsLoading(false);
-        return;
-      }
-      
       const formData = new FormData();
       formData.append("studentId", studentId);
       formData.append("title", title);
@@ -69,13 +84,27 @@ export default function NewLeavePage() {
         method: "POST",
         body: formData,
       });
+      
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data?.error || "Error al registrar la licencia");
+        throw new Error(data?.error || "Error al registrar la licencia.");
       }
+
+      toast.success("¡La solicitud de licencia se ha enviado correctamente!");
+      
+      // Clear form
+      setStudentId("");
+      setTitle("");
+      setMessage("");
+      setReason("");
+      setStartDate("");
+      setEndDate("");
+      setEvidence(null);
+
       router.push("/leaves/mine");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      const errMsg = err instanceof Error ? err.message : "Error desconocido al procesar la solicitud.";
+      toast.error(errMsg);
     } finally {
       setIsLoading(false);
     }
@@ -84,16 +113,12 @@ export default function NewLeavePage() {
   return (
     <Card className="max-w-3xl mx-auto my-8">
       <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleSubmit}>
-        <div className="md:col-span-2 mb-2">
-          {error && <Alert color="failure" className="mt-2">{error}</Alert>}
-        </div>
         <div>
-          <Label htmlFor="student">Estudiante</Label>
+          <Label htmlFor="student">Estudiante *</Label>
           <Select
             id="student"
             value={studentId}
             onChange={e => setStudentId(e.target.value)}
-            required
           >
             <option value="">Seleccione un estudiante</option>
             {students.map(s => (
@@ -102,35 +127,39 @@ export default function NewLeavePage() {
               </option>
             ))}
           </Select>
+          {formErrors.studentId && <span className="text-red-500 text-sm mt-1 block">{formErrors.studentId}</span>}
         </div>
         <div>
-          <Label htmlFor="title">Título</Label>
+          <Label htmlFor="title">Título *</Label>
           <TextInput
             id="title"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            required
+            placeholder="Ej: Ausencia médica por cita dental"
           />
+          {formErrors.title && <span className="text-red-500 text-sm mt-1 block">{formErrors.title}</span>}
         </div>
         <div className="md:col-span-2">
-          <Label htmlFor="message">Mensaje</Label>
+          <Label htmlFor="message">Mensaje detallado *</Label>
           <Textarea
             id="message"
             value={message}
             onChange={e => setMessage(e.target.value)}
             rows={3}
-            required
+            placeholder="Explique detalladamente la situación o el motivo de la licencia..."
           />
+          {formErrors.message && <span className="text-red-500 text-sm mt-1 block">{formErrors.message}</span>}
         </div>
         <div className="md:col-span-2">
-          <Label htmlFor="reason">Motivo</Label>
+          <Label htmlFor="reason">Motivo (Salud, Personal, Calamidad, etc.) *</Label>
           <Textarea
             id="reason"
             value={reason}
             onChange={e => setReason(e.target.value)}
             rows={2}
-            required
+            placeholder="Ej: Problemas de salud del estudiante"
           />
+          {formErrors.reason && <span className="text-red-500 text-sm mt-1 block">{formErrors.reason}</span>}
         </div>
         <div>
           <Label htmlFor="startDate">Fecha de inicio *</Label>
@@ -138,8 +167,8 @@ export default function NewLeavePage() {
             id="startDate"
             value={startDate ? new Date(startDate) : undefined}
             onChange={date => setStartDate(date ? date.toISOString().split("T")[0] : "")}
-            required
           />
+          {formErrors.startDate && <span className="text-red-500 text-sm mt-1 block">{formErrors.startDate}</span>}
         </div>
         <div>
           <Label htmlFor="endDate">Fecha de fin *</Label>
@@ -147,8 +176,8 @@ export default function NewLeavePage() {
             id="endDate"
             value={endDate ? new Date(endDate) : undefined}
             onChange={date => setEndDate(date ? date.toISOString().split("T")[0] : "")}
-            required
           />
+          {formErrors.endDate && <span className="text-red-500 text-sm mt-1 block">{formErrors.endDate}</span>}
         </div>
         <div className="md:col-span-2 mt-2">
           <Label htmlFor="evidence">Evidencia Adjunta (Imagen o PDF, opcional)</Label>
@@ -161,7 +190,7 @@ export default function NewLeavePage() {
           />
         </div>
         <div className="md:col-span-2 text-right mt-4">
-          <Button type="submit" className="bg-primary-400" disabled={isLoading}>
+          <Button type="submit" className="bg-primary-900 hover:bg-primary-800!" disabled={isLoading}>
             {isLoading ? "Registrando..." : "Registrar licencia"}
           </Button>
         </div>

@@ -85,7 +85,6 @@ export async function POST(req: NextRequest) {
       fingerprintBase64,
     } = body;
     // Removimos dependencias de cardCode del controlador tal y como se eliminó de Prisma
-
     if (
       !firstName ||
       !lastName ||
@@ -95,6 +94,15 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Faltan campos obligatorios" },
+        { status: 400 }
+      );
+    }
+
+    // Verificar si ya existe un usuario con ese email
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "El correo ya está registrado por otro estudiante o usuario." },
         { status: 400 }
       );
     }

@@ -68,7 +68,24 @@ export async function PATCH(
 
     if ("firstName" in data) userUpdateData.firstName = data.firstName;
     if ("lastName" in data) userUpdateData.lastName = data.lastName;
-    if ("email" in data) userUpdateData.email = data.email;
+    if ("email" in data) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email: data.email,
+          NOT: {
+            id: id,
+          },
+        },
+      });
+
+      if (existingUser) {
+        return NextResponse.json(
+          { error: "El correo ya está registrado por otro estudiante o usuario." },
+          { status: 400 }
+        );
+      }
+      userUpdateData.email = data.email;
+    }
     if ("phone" in data) userUpdateData.phone = data.phone || null;
     if ("address" in data) userUpdateData.address = data.address || null;
     if ("active" in data) userUpdateData.active = data.active;

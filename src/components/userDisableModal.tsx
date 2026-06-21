@@ -7,6 +7,7 @@ import {
   Button,
 } from "flowbite-react";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 type Props = {
   id: number | null;
@@ -43,11 +44,12 @@ export default function UserDisableModal({
         throw new Error(errorData.error || "Error al cambiar estado del usuario");
       }
 
+      toast.success(active ? `¡El usuario "${name}" ha sido deshabilitado con éxito!` : `¡El usuario "${name}" ha sido habilitado con éxito!`);
       onUpdated(); // refrescar lista
       onClose(); // cerrar modal
     } catch (err) {
-      console.error(err);
-      // opcional: mostrar mensaje de error
+      const errMsg = err instanceof Error ? err.message : "Error al cambiar estado del usuario";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

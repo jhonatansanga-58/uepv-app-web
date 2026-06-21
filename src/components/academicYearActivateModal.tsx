@@ -6,6 +6,7 @@ import {
   Button,
 } from "flowbite-react";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 type Props = {
   id: number | null;
@@ -39,11 +40,12 @@ export default function AcademicYearActivateModal({
         throw new Error(errorData.error || "Error al activar la gestión");
       }
 
+      toast.success(`¡La gestión escolar "${year}" se ha activado con éxito!`);
       onUpdated(); // refresh list
       onClose(); // close modal
     } catch (err) {
-      console.error(err);
-      alert("Hubo un error al activar la gestión.");
+      const errMsg = err instanceof Error ? err.message : "Hubo un error al activar la gestión.";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

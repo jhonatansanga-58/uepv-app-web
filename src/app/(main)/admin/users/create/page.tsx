@@ -10,6 +10,7 @@ import { jsPDF } from "jspdf";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "react-toastify";
 
 const userSchema = z.object({
   firstName: z.string().min(2, "Mínimo 2 caracteres").regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras").max(50, "Máximo 50 caracteres"),
@@ -155,11 +156,16 @@ export default function CreateUserPage() {
       const data = await res.json();
       if (res.ok) {
         setEmailStatus({ type: "success", message: "Credenciales enviadas al correo con éxito." });
+        toast.success("Credenciales enviadas al correo electrónico con éxito.");
       } else {
-        setEmailStatus({ type: "error", message: data.error || "Fallo al enviar correo." });
+        const errorMsg = data.error || "Fallo al enviar correo.";
+        setEmailStatus({ type: "error", message: errorMsg });
+        toast.error(errorMsg);
       }
     } catch {
-      setEmailStatus({ type: "error", message: "Error al conectar con el servidor." });
+      const errorMsg = "Error al conectar con el servidor para enviar el correo.";
+      setEmailStatus({ type: "error", message: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setSendingEmail(false);
     }
@@ -195,9 +201,12 @@ export default function CreateUserPage() {
       const resData = await res.json();
 
       if (!res.ok) {
-        setError(resData.error || "Error al crear el usuario");
+        const errorMsg = resData.error || "Error al crear el usuario.";
+        setError(errorMsg);
+        toast.error(`Error al registrar el usuario: ${errorMsg}`);
       } else {
         setSuccess("Usuario creado correctamente");
+        toast.success(`¡El usuario "${data.firstName} ${data.lastName}" se ha creado con éxito!`);
         reset();
 
         setCreatedUserId(resData.id);
@@ -217,7 +226,9 @@ export default function CreateUserPage() {
         }
       }
     } catch {
-      setError("Error de conexión");
+      const errorMsg = "Error de conexión con el servidor.";
+      setError(errorMsg);
+      toast.error("Ocurrió un error de conexión. No se pudo registrar el usuario.");
     } finally {
       setLoading(false);
     }

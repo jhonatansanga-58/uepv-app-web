@@ -13,6 +13,7 @@ import { HiAcademicCap, HiUserGroup, HiLogout, HiClipboardList, HiBell, HiDocume
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export function SideBarComponent() {
   const { data: session } = useSession();
@@ -48,10 +49,10 @@ export function SideBarComponent() {
       className="min-h-screen max-h-screen w-64 border-r border-gray-200 flex flex-col bg-white"
     >
       {/* Encabezado con escudo */}
-      <div className="flex flex-col items-center py-6 gap-2 shrink-0 border-b border-gray-100">
+      <Link href="/" className="flex flex-col items-center py-6 gap-2 shrink-0 border-b border-gray-100 hover:opacity-85 transition-opacity cursor-pointer">
         <Image src="/escudo.png" alt="Escudo UEPV" width={90} height={90} className="drop-shadow-md" />
         <span className="text-xl font-bold text-neutral-dark tracking-wide">UEPV</span>
-      </div>
+      </Link>
 
       {/* Menú */}
       <div className="flex-1 overflow-y-auto px-2 py-4">

@@ -40,6 +40,7 @@ export default function CourseCard({
   const [selectedParallelIds, setSelectedParallelIds] = useState<number[]>(
     parallels.filter((p) => p.active !== false).map((p) => p.id)
   );
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Keep editedName in sync when name prop changes
   useEffect(() => {
@@ -57,9 +58,34 @@ export default function CourseCard({
         ? current.filter((id) => id !== parallelId)
         : [...current, parallelId]
     );
+    if (errors.parallels) {
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.parallels;
+        return copy;
+      });
+    }
   };
 
   const handleUpdate = () => {
+    setErrors({});
+    const newErrors: Record<string, string> = {};
+
+    if (!editedName.trim()) {
+      newErrors.name = "El nombre es obligatorio.";
+    } else if (editedName.trim().length < 3) {
+      newErrors.name = "Debe tener al menos 3 caracteres.";
+    }
+
+    if (selectedParallelIds.length === 0) {
+      newErrors.parallels = "Debe elegir al menos un paralelo.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     onUpdate(id, {
       name: editedName,
       parallelIds: selectedParallelIds,
@@ -71,12 +97,14 @@ export default function CourseCard({
     setEditedName(name);
     setSelectedParallelIds(parallels.filter((p) => p.active !== false).map((p) => p.id));
     setIsEditing(true);
+    setErrors({});
   };
 
   const handleCancel = () => {
     setEditedName(name);
     setSelectedParallelIds(parallels.filter((p) => p.active !== false).map((p) => p.id));
     setIsEditing(false);
+    setErrors({});
   };
 
   return (
@@ -88,12 +116,24 @@ export default function CourseCard({
           {name.charAt(0) || "C"}
         </div>
         {isEditing ? (
-          <input
-            type="text"
-            value={editedName}
-            onChange={(e) => setEditedName(e.target.value)}
-            className="text-lg font-medium text-gray-800 border rounded px-2 py-1"
-          />
+          <div className="flex flex-col">
+            <input
+              type="text"
+              value={editedName}
+              onChange={(e) => {
+                setEditedName(e.target.value);
+                if (errors.name) {
+                  setErrors((prev) => {
+                    const copy = { ...prev };
+                    delete copy.name;
+                    return copy;
+                  });
+                }
+              }}
+              className="text-lg font-medium text-gray-800 border rounded px-2 py-1"
+            />
+            {errors.name && <span className="text-red-500 text-xs mt-1">{errors.name}</span>}
+          </div>
         ) : (
           <div className="text-lg font-medium text-gray-800">{name}</div>
         )}
@@ -101,18 +141,21 @@ export default function CourseCard({
 
       <div className="text-lg flex items-center w-1/4 px-6 py-4 text-gray-700">
         {isEditing ? (
-          <div className="flex gap-4">
-            {allParallels.map((parallel) => (
-              <label key={parallel.id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={selectedParallelIds.includes(parallel.id)}
-                  onChange={() => handleParallelToggle(parallel.id)}
-                  className="form-checkbox h-5 w-5 text-blue-600"
-                />
-                <span>{parallel.name}</span>
-              </label>
-            ))}
+          <div className="flex flex-col gap-1">
+            <div className="flex gap-4">
+              {allParallels.map((parallel) => (
+                <label key={parallel.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedParallelIds.includes(parallel.id)}
+                    onChange={() => handleParallelToggle(parallel.id)}
+                    className="form-checkbox h-5 w-5 text-blue-600"
+                  />
+                  <span>{parallel.name}</span>
+                </label>
+              ))}
+            </div>
+            {errors.parallels && <span className="text-red-500 text-xs mt-1">{errors.parallels}</span>}
           </div>
         ) : (
           <div>{parallels.filter((p) => p.active !== false).map((p) => p.name).join(", ")}</div>

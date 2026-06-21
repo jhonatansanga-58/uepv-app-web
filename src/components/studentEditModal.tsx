@@ -8,6 +8,7 @@ import {
   Select,
 } from "flowbite-react";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 type Props = {
   id: number | null;
@@ -33,11 +34,13 @@ export default function StudentEditModal({
   });
 
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!open || id === null) return;
 
     setLoading(true);
+    setErrors({});
     fetch(`/api/students/${id}`)
       .then((res) => res.json())
       .then((data) => {
@@ -54,6 +57,7 @@ export default function StudentEditModal({
       })
       .catch(() => {
         setLoading(false);
+        toast.error("Error al cargar la información del estudiante.");
       });
   }, [id, open]);
 
@@ -62,22 +66,70 @@ export default function StudentEditModal({
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear errors when typing
+    if (errors[name]) {
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[name];
+        return copy;
+      });
+    }
   };
 
   const handleSubmit = async () => {
+    setErrors({});
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "El nombre es obligatorio.";
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.firstName)) {
+      newErrors.firstName = "Solo se permiten letras.";
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "El apellido es obligatorio.";
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.lastName)) {
+      newErrors.lastName = "Solo se permiten letras.";
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim() || !emailRegex.test(formData.email)) {
+      newErrors.email = "Correo electrónico inválido.";
+    }
+
+    if (formData.phone && !/^\d{7,10}$/.test(formData.phone)) {
+      newErrors.phone = "El teléfono debe contener entre 7 y 10 dígitos.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Por favor, corrige los errores en el formulario.");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      await fetch(`/api/students/${id}`, {
+      const response = await fetch(`/api/students/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+
+      const resData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resData.error || "Error al actualizar estudiante.");
+      }
+
+      toast.success(`¡El estudiante "${formData.firstName} ${formData.lastName}" se ha actualizado con éxito!`);
       setLoading(false);
       onUpdated();
-      onClose(); // Puedes agregar notificación si quieres
+      onClose();
     } catch (err) {
-      console.error("Error al actualizar", err);
+      const errMsg = err instanceof Error ? err.message : "Error desconocido al guardar los cambios.";
+      toast.error(errMsg);
+      setLoading(false);
     }
   };
 
@@ -91,34 +143,34 @@ export default function StudentEditModal({
           <form className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">Nombre</Label>
+                <Label htmlFor="firstName">Nombre *</Label>
                 <TextInput
                   id="firstName"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  required
                 />
+                {errors.firstName && <span className="text-red-500 text-sm mt-1 block">{errors.firstName}</span>}
               </div>
               <div>
-                <Label htmlFor="lastName">Apellido</Label>
+                <Label htmlFor="lastName">Apellido *</Label>
                 <TextInput
                   id="lastName"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  required
                 />
+                {errors.lastName && <span className="text-red-500 text-sm mt-1 block">{errors.lastName}</span>}
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <TextInput
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  required
                 />
+                {errors.email && <span className="text-red-500 text-sm mt-1 block">{errors.email}</span>}
               </div>
 
               <div>
@@ -130,6 +182,7 @@ export default function StudentEditModal({
                   value={formData.birthDate}
                   onChange={handleChange}
                 />
+                {errors.birthDate && <span className="text-red-500 text-sm mt-1 block">{errors.birthDate}</span>}
               </div>
               <div>
                 <Label htmlFor="gender">Género</Label>
@@ -144,6 +197,7 @@ export default function StudentEditModal({
                   <option value="FEMALE">Femenino</option>
                   <option value="OTHER">Otro</option>
                 </Select>
+                {errors.gender && <span className="text-red-500 text-sm mt-1 block">{errors.gender}</span>}
               </div>
               <div>
                 <Label htmlFor="phone">Teléfono</Label>
@@ -153,6 +207,7 @@ export default function StudentEditModal({
                   value={formData.phone}
                   onChange={handleChange}
                 />
+                {errors.phone && <span className="text-red-500 text-sm mt-1 block">{errors.phone}</span>}
               </div>
               <div>
                 <Label htmlFor="address">Dirección</Label>
@@ -162,13 +217,14 @@ export default function StudentEditModal({
                   value={formData.address}
                   onChange={handleChange}
                 />
+                {errors.address && <span className="text-red-500 text-sm mt-1 block">{errors.address}</span>}
               </div>
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button color="gray" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button onClick={handleSubmit}>Guardar</Button>
+              <Button onClick={handleSubmit} className="bg-primary-900 hover:bg-primary-800!">Guardar</Button>
             </div>
           </form>
         )}

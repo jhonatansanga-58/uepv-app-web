@@ -238,11 +238,12 @@ export default function CreateStudentForm() {
       });
 
       if (res.ok) {
-        toast.success("Estudiante registrado con éxito.");
+        const responseData = await res.json();
+        const studentName = `${responseData.user?.firstName || ""} ${responseData.user?.lastName || ""}`.trim();
+        toast.success(`¡El estudiante "${studentName || data.firstName}" se ha creado con éxito!`);
         reset();
         setFingerprintBase64("");
 
-        const responseData = await res.json();
         if (responseData.user?.userName && responseData.rawPassword) {
           setCredentialsData({
             userName: responseData.user.userName,
@@ -259,17 +260,15 @@ export default function CreateStudentForm() {
 
       } else {
         const errData = await res.json();
-        toast.error("Error: " + (errData.error || "Operación fallida"));
+        toast.error(`Error al registrar el estudiante: ${errData.error || "Operación fallida"}`);
       }
     } catch (error) {
-      toast.error("Problema de red o servidor.");
+      toast.error("Ocurrió un problema de conexión con el servidor.");
     }
   };
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={4000} />
-
       <Card className="max-w-4xl mx-auto my-8">
         <form
           className="grid grid-cols-1 md:grid-cols-2 gap-4"

@@ -1,5 +1,6 @@
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from "flowbite-react";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 type Props = {
   id: number | null;
@@ -25,10 +26,12 @@ export default function LeaveDisableModal({ id, title, active, open, onClose, on
         throw new Error(data?.error || 'Error al cambiar estado de la licencia');
       }
 
+      toast.success(active ? `¡La licencia "${title}" ha sido deshabilitada con éxito!` : `¡La licencia "${title}" ha sido habilitada con éxito!`);
       onUpdated();
       onClose();
     } catch (err) {
-      console.error(err);
+      const errMsg = err instanceof Error ? err.message : "Error al cambiar estado de la licencia";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

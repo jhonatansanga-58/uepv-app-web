@@ -6,6 +6,8 @@ import { HiLockClosed, HiUser } from 'react-icons/hi';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { toast } from 'react-toastify';
+
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,6 +23,22 @@ function LoginFormContent() {
     setIsLoading(true);
     setError('');
 
+    // Client-side validations
+    if (!usernameOrEmail.trim()) {
+      const msg = 'El usuario o correo electrónico es obligatorio.';
+      setError(msg);
+      toast.error(msg);
+      setIsLoading(false);
+      return;
+    }
+    if (!password) {
+      const msg = 'La contraseña es obligatoria.';
+      setError(msg);
+      toast.error(msg);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const result = await signIn('credentials', {
         usernameOrEmail,
@@ -29,25 +47,31 @@ function LoginFormContent() {
       });
 
       if (!result?.error) {
-        // Successful login
+        toast.success("¡Inicio de sesión exitoso! Redirigiendo...");
         router.replace(callbackUrl);
       } else {
-        // Show error
         console.warn('Login error:', result.error);
+        setPassword(''); // Clear password field on failure
         
+        let msg = '';
         if (result.error.includes('LOCKOUT:')) {
           const minutesLeft = result.error.split(':')[1] || '15';
-          setError(`Cuenta bloqueada temporalmente por seguridad. Inténtalo de nuevo en ${minutesLeft} minuto(s).`);
+          msg = `Cuenta bloqueada temporalmente por seguridad. Inténtalo de nuevo en ${minutesLeft} minuto(s).`;
         } else if (result.error.toLowerCase().includes('lockout')) {
-          setError('Cuenta bloqueada temporalmente por demasiados intentos fallidos. Inténtalo en 15 minutos.');
+          msg = 'Cuenta bloqueada temporalmente por demasiados intentos fallidos. Inténtalo en 15 minutos.';
         } else if (result.error.includes('inactive')) {
-          setError('Tu usuario está inactivo. Contacta al administrador del sistema.');
+          msg = 'Tu usuario está inactivo. Contacta al administrador del sistema.';
         } else {
-          setError('Credenciales incorrectas. Por favor, inténtalo de nuevo.');
+          msg = 'Credenciales incorrectas. Por favor, inténtalo de nuevo.';
         }
+        setError(msg);
+        toast.error(msg);
       }
     } catch {
-      setError('Ocurrió un error inesperado. Por favor, intenta nuevamente.');
+      const msg = 'Ocurrió un error inesperado. Por favor, intenta nuevamente.';
+      setError(msg);
+      toast.error(msg);
+      setPassword('');
     } finally {
       setIsLoading(false);
     }

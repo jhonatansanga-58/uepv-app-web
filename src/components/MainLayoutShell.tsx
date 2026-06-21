@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { SideBarComponent } from "./sidebar";
 import { NavBarComponent } from "./navbar";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export function MainLayoutShell({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -40,6 +42,7 @@ export function MainLayoutShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+      <ToastContainer position="top-right" autoClose={4000} />
     </div>
   );
 }

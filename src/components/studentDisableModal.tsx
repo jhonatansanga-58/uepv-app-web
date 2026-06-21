@@ -7,6 +7,7 @@ import {
   Button,
 } from "flowbite-react";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 type Props = {
   id: number | null;
@@ -38,13 +39,17 @@ export default function StudentDisableModal({
         body: JSON.stringify({ active: !active }),
       });
 
-      if (!res.ok) throw new Error("Error al deshabilitar");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Error al cambiar estado del estudiante");
+      }
 
+      toast.success(active ? `¡El estudiante "${name}" ha sido deshabilitado con éxito!` : `¡El estudiante "${name}" ha sido habilitado con éxito!`);
       onUpdated(); // refrescar lista
       onClose(); // cerrar modal
     } catch (err) {
-      console.error(err);
-      // opcional: mostrar mensaje de error
+      const errMsg = err instanceof Error ? err.message : "Error al cambiar estado del estudiante";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

@@ -33,11 +33,21 @@ export default function LoginPage() {
         router.replace(callbackUrl);
       } else {
         // Show error
-        console.error('Login error:', result.error);
-        setError('Invalid credentials. Please try again.');
+        console.warn('Login error:', result.error);
+        
+        if (result.error.includes('LOCKOUT:')) {
+          const minutesLeft = result.error.split(':')[1] || '15';
+          setError(`Cuenta bloqueada temporalmente por seguridad. Inténtalo de nuevo en ${minutesLeft} minuto(s).`);
+        } else if (result.error.toLowerCase().includes('lockout')) {
+          setError('Cuenta bloqueada temporalmente por demasiados intentos fallidos. Inténtalo en 15 minutos.');
+        } else if (result.error.includes('inactive') || result.error.includes('inactive')) {
+          setError('Tu usuario está inactivo. Contacta al administrador del sistema.');
+        } else {
+          setError('Credenciales incorrectas. Por favor, inténtalo de nuevo.');
+        }
       }
     } catch {
-      setError('An error occurred. Please try again.');
+      setError('Ocurrió un error inesperado. Por favor, intenta nuevamente.');
     } finally {
       setIsLoading(false);
     }

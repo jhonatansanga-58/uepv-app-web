@@ -13,13 +13,14 @@ import {
   ModalBody,
   ModalFooter
 } from "flowbite-react";
-import { HiClipboardCopy } from "react-icons/hi";
+import { HiClipboardCopy, HiDownload, HiMail, HiChat } from "react-icons/hi";
 import FingerprintScanner from "@/components/FingerprintScanner";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { jsPDF } from "jspdf";
 
 const studentSchema = z.object({
   firstName: z.string().min(2, "Mínimo 2 caracteres").regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras").max(50, "Máximo 50 caracteres"),
@@ -33,13 +34,13 @@ const studentSchema = z.object({
   parallelId: z.string().min(1, "Seleccione un paralelo"),
   tutorId: z.string().optional().or(z.literal("")),
 }).refine(data => {
-   if(!data.birthDate) return true;
-   const d = new Date(data.birthDate);
-   const age = new Date().getFullYear() - d.getFullYear();
-   return age >= 3 && age <= 22;
+  if (!data.birthDate) return true;
+  const d = new Date(data.birthDate);
+  const age = new Date().getFullYear() - d.getFullYear();
+  return age >= 3 && age <= 22;
 }, {
-   message: "El estudiante debe tener entre 3 y 22 años",
-   path: ["birthDate"]
+  message: "El estudiante debe tener entre 3 y 22 años",
+  path: ["birthDate"]
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -70,8 +71,141 @@ export default function CreateStudentForm() {
   const [parallels, setParallels] = useState<Parallel[]>([]);
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [scannerResetKey, setScannerResetKey] = useState<number>(0);
-  const [credentialsData, setCredentialsData] = useState<{userName: string, rawPassword: string} | null>(null);
-  
+  const [credentialsData, setCredentialsData] = useState<{
+    userName: string;
+    rawPassword: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    role: string;
+  } | null>(null);
+
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<{ type: "success" | "error", message: string } | null>(null);
+
+  const downloadPDF = () => {
+    if (!credentialsData) return;
+    const { userName, rawPassword, firstName, lastName, email, phone } = credentialsData;
+
+    const doc = new jsPDF();
+
+    // Header
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(132, 45, 156); // #842d9c
+    doc.text("UNIDAD EDUCATIVA \"PLENITUD DE VIDA\"", 105, 20, { align: "center" });
+
+    doc.setFontSize(11);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Portal Académico UEPV - Credenciales de Acceso", 105, 26, { align: "center" });
+
+    // Draw line
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 32, 190, 32);
+
+    // Title
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text("COMPROBANTE DE MATRICULACIÓN DE ESTUDIANTE", 20, 42);
+
+    // Date
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString("es-ES")}`, 20, 48);
+
+    // User Details Box
+    doc.setFillColor(245, 245, 245);
+    doc.rect(20, 55, 170, 45, "F");
+
+    doc.setFont("Helvetica", "bold");
+    doc.text("Datos del Estudiante:", 25, 62);
+    doc.setFont("Helvetica", "normal");
+    doc.text(`Nombre Completo: ${firstName} ${lastName}`, 25, 70);
+    doc.text("Rol: Estudiante", 25, 77);
+    doc.text(`Correo Electrónico: ${email}`, 25, 84);
+    if (phone) {
+      doc.text(`Teléfono: ${phone}`, 25, 91);
+    }
+
+    // Credentials Box
+    doc.setFillColor(249, 241, 251); // #f9f1fb
+    doc.rect(20, 107, 170, 35, "F");
+
+    doc.setFont("Helvetica", "bold");
+    doc.setTextColor(132, 45, 156);
+    doc.text("CREDENCIALES DE ACCESO TEMPORAL:", 25, 115);
+
+    doc.setFont("Courier", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Usuario:    ${userName}`, 25, 124);
+    doc.text(`Contraseña: ${rawPassword}`, 25, 131);
+
+    // Instructions
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 80);
+    doc.text("Instrucciones de ingreso:", 20, 152);
+
+    let y = 159;
+    const instructions = [
+      "1. Ingrese a la dirección web del portal: http://localhost:3000 (o la URL provista por el colegio).",
+      "2. Digite su Nombre de Usuario y Contraseña Temporal.",
+      "3. Por motivos de seguridad, el sistema le obligará a actualizar su contraseña al ingresar.",
+      "4. Mantenga estas credenciales bajo estricta confidencialidad."
+    ];
+
+    instructions.forEach(line => {
+      doc.text(line, 20, y);
+      y += 7;
+    });
+
+    // Footer signature line
+    doc.line(60, 230, 150, 230);
+    doc.text("Firma o Sello Autorizado", 105, 236, { align: "center" });
+
+    // Save PDF
+    doc.save(`Credenciales_Estudiante_${firstName}_${lastName}.pdf`);
+  };
+
+  const sendEmail = async () => {
+    if (!credentialsData) return;
+    setSendingEmail(true);
+    setEmailStatus(null);
+    try {
+      const res = await fetch("/api/users/send-credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: credentialsData.email,
+          name: `${credentialsData.firstName} ${credentialsData.lastName}`,
+          userName: credentialsData.userName,
+          rawPassword: credentialsData.rawPassword,
+          role: "STUDENT",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEmailStatus({ type: "success", message: "Credenciales enviadas al correo con éxito." });
+      } else {
+        setEmailStatus({ type: "error", message: data.error || "Fallo al enviar correo." });
+      }
+    } catch {
+      setEmailStatus({ type: "error", message: "Error al conectar con el servidor." });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const getWhatsAppLink = () => {
+    if (!credentialsData || !credentialsData.phone) return "#";
+    const { userName, rawPassword, firstName, lastName } = credentialsData;
+    const message = `*Unidad Educativa Plenitud de Vida*\n\nEstimado(a) estudiante *${firstName} ${lastName}*, le compartimos sus credenciales de acceso al Portal Académico:\n\n*Usuario:* ${userName}\n*Contraseña temporal:* ${rawPassword}\n\n*Acceso:* http://localhost:3000\n\n_Nota: El sistema le solicitará cambiar su contraseña al ingresar por primera vez._`;
+    const cleanPhone = credentialsData.phone.replace(/\D/g, ""); // leave only digits
+    return `https://wa.me/591${cleanPhone}?text=${encodeURIComponent(message)}`;
+  };
+
   const [fingerprintBase64, setFingerprintBase64] = useState("");
 
   const selectedCourseId = watch("courseId");
@@ -106,15 +240,23 @@ export default function CreateStudentForm() {
       if (res.ok) {
         toast.success("Estudiante registrado con éxito.");
         reset();
-        setFingerprintBase64(""); 
-        
+        setFingerprintBase64("");
+
         const responseData = await res.json();
         if (responseData.user?.userName && responseData.rawPassword) {
-            setCredentialsData({ userName: responseData.user.userName, rawPassword: responseData.rawPassword });
+          setCredentialsData({
+            userName: responseData.user.userName,
+            rawPassword: responseData.rawPassword,
+            firstName: responseData.user.firstName,
+            lastName: responseData.user.lastName,
+            email: responseData.user.email,
+            phone: responseData.user.phone || undefined,
+            role: "STUDENT"
+          });
         }
 
         setScannerResetKey(prev => prev + 1);
-        
+
       } else {
         const errData = await res.json();
         toast.error("Error: " + (errData.error || "Operación fallida"));
@@ -127,7 +269,7 @@ export default function CreateStudentForm() {
   return (
     <>
       <ToastContainer position="top-right" autoClose={4000} />
-      
+
       <Card className="max-w-4xl mx-auto my-8">
         <form
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
@@ -172,14 +314,14 @@ export default function CreateStudentForm() {
           <div>
             <Label>Fecha de nacimiento</Label>
             <Controller
-               control={control}
-               name="birthDate"
-               render={({ field }) => (
-                 <Datepicker
-                   value={field.value ? new Date(field.value) : undefined}
-                   onChange={(date) => field.onChange(date ? date.toISOString().split("T")[0] : "")}
-                 />
-               )}
+              control={control}
+              name="birthDate"
+              render={({ field }) => (
+                <Datepicker
+                  value={field.value ? new Date(field.value) : undefined}
+                  onChange={(date) => field.onChange(date ? date.toISOString().split("T")[0] : "")}
+                />
+              )}
             />
             {errors.birthDate && <span className="text-red-500 text-sm">{errors.birthDate.message}</span>}
           </div>
@@ -236,22 +378,22 @@ export default function CreateStudentForm() {
             </Select>
             {errors.tutorId && <span className="text-red-500 text-sm">{errors.tutorId.message}</span>}
           </div>
-          
+
           <div className="md:col-span-2 mt-4">
             <Label className="mb-2 block">Autenticación Biométrica (Requerido)</Label>
-            <FingerprintScanner 
-              key={scannerResetKey} 
+            <FingerprintScanner
+              key={scannerResetKey}
               onCapture={(base64) => {
-                 setFingerprintBase64(base64);
-              }} 
+                setFingerprintBase64(base64);
+              }}
             />
           </div>
 
           <div className="md:col-span-2 text-right mt-6">
-            <Button 
-                type="submit" 
-                className="ml-auto"
-                color="blue"
+            <Button
+              type="submit"
+              className="ml-auto"
+              color="blue"
             >
               Registrar estudiante
             </Button>
@@ -287,6 +429,48 @@ export default function CreateStudentForm() {
                 </div>
               </div>
             </div>
+
+            {/* Opciones de Comunicación de Credenciales */}
+            <div className="mt-4 border-t border-gray-200 pt-4 space-y-3">
+              <Label className="text-xs text-gray-400 uppercase tracking-widest block mb-2">Compartir o Entregar</Label>
+
+              <div className="grid grid-cols-1 gap-2">
+                <Button color="light" size="sm" className="flex items-center justify-center gap-2" onClick={downloadPDF}>
+                  <HiDownload className="w-4 h-4" />
+                  Descargar Comprobante PDF
+                </Button>
+
+                <Button
+                  color="purple"
+                  size="sm"
+                  className="flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white"
+                  onClick={sendEmail}
+                  disabled={sendingEmail}
+                >
+                  <HiMail className="w-4 h-4" />
+                  {sendingEmail ? "Enviando Correo..." : "Enviar por Correo Electrónico"}
+                </Button>
+
+                {credentialsData?.phone && (
+                  <a
+                    href={getWhatsAppLink()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-4 py-2 text-center"
+                  >
+                    <HiChat className="w-4 h-4 mr-2" />
+                    Enviar por WhatsApp
+                  </a>
+                )}
+              </div>
+
+              {emailStatus && (
+                <div className={`text-xs mt-2 text-center ${emailStatus.type === "success" ? "text-green-600" : "text-red-600"}`}>
+                  {emailStatus.message}
+                </div>
+              )}
+            </div>
+
           </div>
         </ModalBody>
         <ModalFooter className="flex justify-end">

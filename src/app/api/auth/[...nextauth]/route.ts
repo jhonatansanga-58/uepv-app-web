@@ -37,6 +37,8 @@ const handler = NextAuth({
             password: true,
             role: true,
             active: true,
+            loginAttempts: true,
+            lockoutUntil: true,
           },
         });
 
@@ -48,10 +50,45 @@ const handler = NextAuth({
           throw new Error("User is inactive");
         }
 
+        // Check if account is locked
+        if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+          const minutesLeft = Math.ceil(
+            (user.lockoutUntil.getTime() - Date.now()) / (60 * 1000)
+          );
+          throw new Error(`LOCKOUT:${minutesLeft}`);
+        }
+
         // Compare passwords
         const isValid = await compare(credentials.password, user.password);
         if (!isValid) {
+          const newAttempts = user.loginAttempts + 1;
+          const isLockout = newAttempts >= 5;
+          const lockoutUntil = isLockout ? new Date(Date.now() + 15 * 60 * 1000) : null;
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              loginAttempts: newAttempts,
+              lockoutUntil,
+            },
+          });
+
+          if (isLockout) {
+            throw new Error("LOCKOUT:15");
+          }
+
           throw new Error("Invalid password");
+        }
+
+        // Compare passwords passed. Reset attempts if necessary
+        if (user.loginAttempts > 0 || user.lockoutUntil) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              loginAttempts: 0,
+              lockoutUntil: null,
+            },
+          });
         }
 
         // Verificador de contraseña por defecto (Fase 2.2)

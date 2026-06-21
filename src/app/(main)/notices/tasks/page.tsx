@@ -8,6 +8,7 @@ import TaskDisableModal from "@/components/notices/taskDisableModal";
 import ReportDateRangeModal from "@/components/reports/reportDateRangeModal";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
+import { initReportDoc, drawTableHeader, drawRowDivider } from "@/utils/pdfReport";
 
 interface Subject {
   id: number;
@@ -181,34 +182,65 @@ export default function TasksPage() {
               XLSX.utils.book_append_sheet(wb, ws, 'Tareas');
               XLSX.writeFile(wb, `${fileLabel}.xlsx`);
             } else {
-              const doc = new jsPDF();
-              doc.setFontSize(16);
-              doc.text('REPORTE DE TAREAS', 105, 20, { align: 'center' });
-              doc.setFontSize(12);
-              doc.text(`Período: ${f?.toLocaleDateString() || ''} - ${t?.toLocaleDateString() || ''}`, 20, 36);
+              const periodLabel = `${f ? f.toLocaleDateString("es-ES") : ""} - ${t ? t.toLocaleDateString("es-ES") : ""}`;
+              const report = initReportDoc("Reporte de Tareas", periodLabel);
+              const doc = report.doc;
 
-              let y = 50;
-              doc.setFontSize(11);
-              doc.text('Título', 20, y);
-              doc.text('Enviado', 90, y);
-              doc.text('Vence', 140, y);
-              y += 8;
+              let y = report.getStartY() + 5;
+              
+              // Draw Table Header
+              drawTableHeader(doc, y, [
+                { text: "Título", x: 20 },
+                { text: "Enviado", x: 90 },
+                { text: "Vence", x: 140 }
+              ]);
+              y += 7;
 
               filtered.forEach(task => {
-                if (y > 270) { doc.addPage(); y = 20; }
-                doc.text(task.title || '', 20, y);
-                doc.text(task.sendDate ? new Date(task.sendDate.toString()).toLocaleString() : '', 90, y);
-                doc.text(task.dueDate ? new Date(task.dueDate.toString()).toLocaleString() : '', 140, y);
-                y += 8;
+                if (y > 250) { 
+                  report.addPage(); 
+                  y = report.getStartY() + 5;
+                  drawTableHeader(doc, y, [
+                    { text: "Título", x: 20 },
+                    { text: "Enviado", x: 90 },
+                    { text: "Vence", x: 140 }
+                  ]);
+                  y += 7;
+                }
+                
+                doc.setFont("Helvetica", "bold");
+                doc.setFontSize(9);
+                doc.text(task.title || "", 20, y);
+                doc.setFont("Helvetica", "normal");
+                doc.text(task.sendDate ? new Date(task.sendDate.toString()).toLocaleDateString("es-ES") : "", 90, y);
+                doc.text(task.dueDate ? new Date(task.dueDate.toString()).toLocaleDateString("es-ES") : "", 140, y);
+                y += 6;
+                
+                // Details (Subject, CourseParallel, Active status)
+                const courseInfo = task.courseParallel ? `${task.courseParallel.course.name} - ${task.courseParallel.parallel.name}` : "";
+                const details = `Materia: ${task.subject?.name || ""} | Curso: ${courseInfo}`;
+                
+                doc.setFont("Helvetica", "bold");
+                doc.text(details, 20, y);
+                y += 6;
 
-                const details = `Materia: ${task.subject?.name || ''} | Curso: ${task.courseParallel ? `${task.courseParallel.course.name} - ${task.courseParallel.parallel.name}` : ''} | Activo: ${task.active ? 'Sí' : 'No'}`;
-                const split = doc.splitTextToSize(details + '\n' + (task.description || ''), 170);
+                // Description
+                const desc = task.description ? `Descripción: ${task.description}` : "";
+                const split = doc.splitTextToSize(desc, 170);
+                doc.setFont("Helvetica", "italic");
+                doc.setTextColor(100, 100, 100);
                 split.forEach((line: string) => {
-                  if (y > 270) { doc.addPage(); y = 20; }
+                  if (y > 260) {
+                    report.addPage();
+                    y = report.getStartY() + 5;
+                  }
                   doc.text(line, 20, y);
-                  y += 6;
+                  y += 5;
                 });
-                y += 4;
+                doc.setTextColor(0, 0, 0); // reset color
+                
+                drawRowDivider(doc, y + 1);
+                y += 6;
               });
 
               doc.save(`${fileLabel}.pdf`);

@@ -7,6 +7,7 @@ import ReportFormatModal from "@/components/reports/reportFormatModal";
 import { useSession } from "next-auth/react";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
+import { initReportDoc, drawTableHeader, drawRowDivider } from "@/utils/pdfReport";
 
 type StudentMinimal = { id: number; label: string };
 
@@ -241,40 +242,58 @@ export default function AttendancesHistoryPage() {
               // Generate Excel file
               XLSX.writeFile(wb, `asistencias_${studentInfo?.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
             } else {
-              // Create PDF
-              const doc = new jsPDF();
-              
-              // Add title
-              doc.setFontSize(16);
-              doc.text("REPORTE DE ASISTENCIAS", 105, 20, { align: "center" });
-              
-              // Add student info
-              doc.setFontSize(12);
-              doc.text(`Estudiante: ${studentInfo?.label || ''}`, 20, 40);
-              doc.text(`Período: ${new Date(fromDate).toLocaleDateString()} - ${new Date(toDate).toLocaleDateString()}`, 20, 50);
-              
-              // Add attendance records
-              doc.setFontSize(11);
-              let y = 70;
-              
+              // Create PDF with custom styling helper
+              const periodLabel = `${new Date(fromDate).toLocaleDateString("es-ES")} - ${new Date(toDate).toLocaleDateString("es-ES")}`;
+              const report = initReportDoc("Reporte de Asistencias", periodLabel);
+              const doc = report.doc;
+
+              // Add student info section
+              doc.setFont("Helvetica", "bold");
+              doc.setFontSize(10);
+              doc.text("Estudiante:", 15, report.getStartY());
+              doc.setFont("Helvetica", "normal");
+              doc.text(studentInfo?.label || "", 40, report.getStartY());
+
+              let y = report.getStartY() + 10;
+
               // Table header
-              doc.text("Fecha y hora", 20, y);
-              doc.text("Registrado por", 100, y);
-              y += 10;
-              
+              drawTableHeader(doc, y, [
+                { text: "Fecha y hora", x: 20 },
+                { text: "Registrado por", x: 110 },
+              ]);
+              y += 7;
+
               // Table content
-              attendances.forEach(a => {
-                if (y > 270) { // Check if we need a new page
-                  doc.addPage();
-                  y = 20;
+              attendances.forEach((a) => {
+                if (y > 260) {
+                  report.addPage();
+                  y = report.getStartY() + 10;
+                  drawTableHeader(doc, y, [
+                    { text: "Fecha y hora", x: 20 },
+                    { text: "Registrado por", x: 110 },
+                  ]);
+                  y += 7;
                 }
+                
+                doc.setFont("Helvetica", "normal");
+                doc.setFontSize(9);
                 doc.text(new Date(a.date).toLocaleString(), 20, y);
-                doc.text(a.user ? `${a.user.firstName} ${a.user.lastName}` : 'Dispositivo', 100, y);
-                y += 10;
+                doc.text(
+                  a.user ? `${a.user.firstName} ${a.user.lastName}` : "Dispositivo",
+                  110,
+                  y
+                );
+                
+                drawRowDivider(doc, y + 2);
+                y += 8;
               });
 
               // Save PDF
-              doc.save(`asistencias_${studentInfo?.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.pdf`);
+              doc.save(
+                `asistencias_${studentInfo?.label
+                  .replace(/[^a-z0-9]/gi, "_")
+                  .toLowerCase()}_${new Date().toISOString().split("T")[0]}.pdf`
+              );
             }
 
             setShowReportModal(false);

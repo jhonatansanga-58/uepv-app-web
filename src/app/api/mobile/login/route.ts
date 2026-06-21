@@ -65,14 +65,80 @@ export async function POST(req: Request) {
       });
     }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return new NextResponse(JSON.stringify({ error: 'Invalid credentials' }), {
-        status: 401,
+    if (!user.active) {
+      return new NextResponse(JSON.stringify({ error: 'User is inactive' }), {
+        status: 403,
         headers: {
           'Access-Control-Allow-Origin': isAllowed ? origin : '*',
           'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    }
+
+    // Check lockout status
+    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+      const minutesLeft = Math.ceil(
+        (user.lockoutUntil.getTime() - Date.now()) / (60 * 1000)
+      );
+      return new NextResponse(
+        JSON.stringify({
+          error: `Account locked. Please try again in ${minutesLeft} minute(s).`,
+          lockout: true,
+          minutesLeft,
+        }),
+        {
+          status: 403,
+          headers: {
+            'Access-Control-Allow-Origin': isAllowed ? origin : '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          },
+        }
+      );
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      const newAttempts = user.loginAttempts + 1;
+      const isLockout = newAttempts >= 5;
+      const lockoutUntil = isLockout ? new Date(Date.now() + 15 * 60 * 1000) : null;
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          loginAttempts: newAttempts,
+          lockoutUntil,
+        },
+      });
+
+      const errorMessage = isLockout
+        ? 'Account locked due to too many failed attempts. Try again in 15 minutes.'
+        : 'Invalid credentials';
+
+      return new NextResponse(
+        JSON.stringify({
+          error: errorMessage,
+          lockout: isLockout,
+        }),
+        {
+          status: 401,
+          headers: {
+            'Access-Control-Allow-Origin': isAllowed ? origin : '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          },
+        }
+      );
+    }
+
+    // Reset attempts if successful login
+    if (user.loginAttempts > 0 || user.lockoutUntil) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          loginAttempts: 0,
+          lockoutUntil: null,
         },
       });
     }

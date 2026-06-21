@@ -12,10 +12,12 @@ import {
 import { HiAcademicCap, HiUserGroup, HiLogout, HiClipboardList, HiBell, HiDocumentText } from "react-icons/hi";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 export function SideBarComponent() {
   const { data: session } = useSession();
   const userRole = session?.user?.role;
+  const pathname = usePathname();
 
   return (
     <Sidebar
@@ -38,11 +40,11 @@ export function SideBarComponent() {
                 <SidebarCollapse
                   icon={() => <HiUserGroup className="text-white w-6 h-6" />}
                   label="Estudiantes"
-                  open={false}
+                  open={pathname.startsWith("/admin/students")}
                   className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
                 >
-                  <SidebarItem href="/admin/students">Lista</SidebarItem>
-                  <SidebarItem href="/admin/students/create">
+                  <SidebarItem href="/admin/students" active={pathname === "/admin/students"}>Lista</SidebarItem>
+                  <SidebarItem href="/admin/students/create" active={pathname === "/admin/students/create"}>
                     Registrar nuevo
                   </SidebarItem>
                 </SidebarCollapse>
@@ -50,11 +52,11 @@ export function SideBarComponent() {
                 <SidebarCollapse
                   icon={() => <HiUserGroup className="text-white w-6 h-6" />}
                   label="Usuarios"
-                  open={false}
+                  open={pathname.startsWith("/admin/users")}
                   className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
                 >
-                  <SidebarItem href="/admin/users">Lista</SidebarItem>
-                  <SidebarItem href="/admin/users/create">
+                  <SidebarItem href="/admin/users" active={pathname === "/admin/users"}>Lista</SidebarItem>
+                  <SidebarItem href="/admin/users/create" active={pathname === "/admin/users/create"}>
                     Registrar nuevo
                   </SidebarItem>
                 </SidebarCollapse>
@@ -62,16 +64,16 @@ export function SideBarComponent() {
                 <SidebarCollapse
                   icon={() => <HiAcademicCap className="text-white w-6 h-6" />}
                   label="Organización escolar"
-                  open={false}
+                  open={pathname === "/admin/academic-years" || pathname === "/admin/courses" || pathname === "/admin/subjects"}
                   className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
                 >
-                  <SidebarItem href="/admin/academic-years">
+                  <SidebarItem href="/admin/academic-years" active={pathname === "/admin/academic-years"}>
                     Gestiones
                   </SidebarItem>
-                  <SidebarItem href="/admin/courses">
+                  <SidebarItem href="/admin/courses" active={pathname === "/admin/courses"}>
                     Cursos
                   </SidebarItem>
-                  <SidebarItem href="/admin/subjects">
+                  <SidebarItem href="/admin/subjects" active={pathname === "/admin/subjects"}>
                     Materias
                   </SidebarItem>
                 </SidebarCollapse>
@@ -83,17 +85,17 @@ export function SideBarComponent() {
               <SidebarCollapse
                 icon={() => <HiDocumentText className="text-white w-6 h-6" />}
                 label="Licencias"
-                open={false}
+                open={pathname.startsWith("/leaves")}
                 className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
               >
                 {userRole === 'TUTOR' && (
                   <>
-                    <SidebarItem href="/leaves/mine">Mis licencias</SidebarItem>
-                    <SidebarItem href="/leaves/new">Registrar nueva</SidebarItem>
+                    <SidebarItem href="/leaves/mine" active={pathname === "/leaves/mine"}>Mis licencias</SidebarItem>
+                    <SidebarItem href="/leaves/new" active={pathname === "/leaves/new"}>Registrar nueva</SidebarItem>
                   </>
                 )}
                 {userRole === 'ADMIN' && (
-                  <SidebarItem href="/leaves">Revisar</SidebarItem>
+                  <SidebarItem href="/leaves" active={pathname === "/leaves"}>Revisar</SidebarItem>
                 )}
               </SidebarCollapse>
             )}
@@ -102,16 +104,16 @@ export function SideBarComponent() {
               <SidebarCollapse
                 icon={() => <HiClipboardList className="text-white w-6 h-6" />}
                 label="Asistencias"
-                open={false}
+                open={pathname.startsWith("/attendances")}
                 className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
               >
                 {(userRole === 'ADMIN' || userRole === 'TEACHER') && (
                   <>
-                    <SidebarItem href="/attendances/register">Registrar manualmente</SidebarItem>
-                    <SidebarItem href="/attendances/register-fingerprint">Registrar con huella</SidebarItem>
+                    <SidebarItem href="/attendances/register" active={pathname === "/attendances/register"}>Registrar manualmente</SidebarItem>
+                    <SidebarItem href="/attendances/register-fingerprint" active={pathname === "/attendances/register-fingerprint"}>Registrar con huella</SidebarItem>
                   </>
                 )}
-                <SidebarItem href="/attendances/history">Historial</SidebarItem>
+                <SidebarItem href="/attendances/history" active={pathname === "/attendances/history"}>Historial</SidebarItem>
               </SidebarCollapse>
             )}
             {/* Notices / Avisos */}
@@ -119,14 +121,14 @@ export function SideBarComponent() {
               <SidebarCollapse
                 icon={() => <HiBell className="text-white w-6 h-6" />}
                 label="Avisos"
-                open={false}
+                open={pathname.startsWith("/notices")}
                 className="bg-primary-300 text-white hover:bg-primary-600 focus:ring-0"
               >
-                <SidebarItem href="/notices/notifications">Comunicados</SidebarItem>
+                <SidebarItem href="/notices/notifications" active={pathname === "/notices/notifications"}>Comunicados</SidebarItem>
                 {userRole !== 'ADMIN' && (
-                  <SidebarItem href="/notices/tasks">Tareas</SidebarItem>
+                  <SidebarItem href="/notices/tasks" active={pathname === "/notices/tasks"}>Tareas</SidebarItem>
                 )}
-                <SidebarItem href="/notices/meetings">Citaciones</SidebarItem>
+                <SidebarItem href="/notices/meetings" active={pathname === "/notices/meetings"}>Citaciones</SidebarItem>
               </SidebarCollapse>
             )}
           </SidebarItemGroup>

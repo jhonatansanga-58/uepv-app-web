@@ -21,6 +21,8 @@ model User {
   active              Boolean          @default(true)
   userName            String           @unique
   firebaseToken       String?
+  loginAttempts       Int              @default(0)
+  lockoutUntil        DateTime?
   attendancesRecorded Attendance[]
   LeaveRequest        LeaveRequest[]
   meetingsAsTeacher   Meeting[]        @relation("TeacherMeeting")

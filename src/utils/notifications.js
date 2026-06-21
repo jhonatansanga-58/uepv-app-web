@@ -1,8 +1,22 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const admin = require('firebase-admin');
-const serviceAccount = require('../../service-account.json');
 
-if (!admin.apps.length) {
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } catch (err) {
+    console.error("Error parsing FIREBASE_SERVICE_ACCOUNT:", err);
+  }
+} else {
+  try {
+    serviceAccount = require('../../service-account.json');
+  } catch (err) {
+    console.warn("service-account.json not found and FIREBASE_SERVICE_ACCOUNT environment variable is missing.");
+  }
+}
+
+if (serviceAccount && !admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     ignoreUndefinedProperties: true,

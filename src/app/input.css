@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Desactivar modo oscuro */
+@variant dark (&:where(.dark, .dark *));
+
 @plugin "flowbite/plugin";
 
 @source "../node_modules/flowbite";

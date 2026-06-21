@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const courseId = parseInt(params.id);
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const courseId = parseInt(id);
 
   if (isNaN(courseId)) {
     return NextResponse.json({ error: "Invalid course ID" }, { status: 400 });

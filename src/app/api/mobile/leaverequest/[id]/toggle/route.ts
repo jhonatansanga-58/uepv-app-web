@@ -22,9 +22,10 @@ export async function OPTIONS() {
 }
 
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id, 10);
+    const { id: rawId } = await params;
+    const id = parseInt(rawId, 10);
     if (Number.isNaN(id)) return new NextResponse(
       JSON.stringify({ error: "Invalid ID" }),
       { status: 400, headers: corsHeaders }

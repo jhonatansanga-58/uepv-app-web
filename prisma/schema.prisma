@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -21,6 +22,8 @@ model User {
   active              Boolean          @default(true)
   userName            String           @unique
   firebaseToken       String?
+  loginAttempts       Int              @default(0)
+  lockoutUntil        DateTime?
   attendancesRecorded Attendance[]
   LeaveRequest        LeaveRequest[]
   meetingsAsTeacher   Meeting[]        @relation("TeacherMeeting")

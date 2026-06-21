@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { userId: id } = params;
+  const { userId: id } = await params;
   if (!id) return NextResponse.json({ error: "Falta id" }, { status: 400 });
 
   async function tryFind(userId: number) {
@@ -37,9 +37,9 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { userId: id } = params;
+  const { userId: id } = await params;
   if (!id) return NextResponse.json({ error: "Falta id" }, { status: 400 });
 
   try {

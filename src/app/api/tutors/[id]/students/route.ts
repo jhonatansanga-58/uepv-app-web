@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const tutorId = parseInt(params.id, 10);
+    const { id: rawId } = await params;
+    const tutorId = parseInt(rawId, 10);
     if (Number.isNaN(tutorId)) {
       return NextResponse.json({ error: "Invalid tutor id" }, { status: 400 });
     }
@@ -24,23 +25,26 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         student: {
           include: {
             user: true,
-            courseParallel: {
-              include: { course: true, parallel: true },
+            enrollments: {
+              where: { active: true },
+              include: { courseParallel: { include: { course: true, parallel: true } } },
             },
           },
         },
       },
     });
 
-    const students = studentTutors.map((st) => ({
-      id: st.student.id,
-      firstName: st.student.user.firstName,
-      lastName: st.student.user.lastName,
-      cardCode: st.student.cardCode,
-      courseParallelId: st.student.courseParallelId,
-      course: st.student.courseParallel?.course?.name ?? null,
-      parallel: st.student.courseParallel?.parallel?.name ?? null,
-    }));
+    const students = studentTutors.map((st) => {
+      const activeEnrollment = st.student.enrollments?.[0];
+      return {
+        id: st.student.id,
+        firstName: st.student.user.firstName,
+        lastName: st.student.user.lastName,
+        courseParallelId: activeEnrollment?.courseParallelId || null,
+        course: activeEnrollment?.courseParallel.course.name || null,
+        parallel: activeEnrollment?.courseParallel.parallel.name || null,
+      };
+    });
 
     return NextResponse.json(students);
   } catch (error) {

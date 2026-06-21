@@ -9,6 +9,7 @@ import NotificationCreateModal from "@/components/notices/notificationCreateModa
 import ReportDateRangeModal from "@/components/reports/reportDateRangeModal";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
+import { initReportDoc, drawTableHeader, drawRowDivider } from "@/utils/pdfReport";
 
 interface User {
   id: number;
@@ -210,40 +211,66 @@ export default function NotificationsPage() {
               XLSX.utils.book_append_sheet(wb, ws, 'Comunicados');
               XLSX.writeFile(wb, `${fileLabel}.xlsx`);
             } else {
-              const doc = new jsPDF();
-              doc.setFontSize(16);
-              doc.text('REPORTE DE COMUNICADOS', 105, 20, { align: 'center' });
-              doc.setFontSize(12);
-              doc.text(`Período: ${f?.toLocaleDateString() || ''} - ${t?.toLocaleDateString() || ''}`, 20, 36);
+              const periodLabel = `${f ? f.toLocaleDateString("es-ES") : ""} - ${t ? t.toLocaleDateString("es-ES") : ""}`;
+              const report = initReportDoc("Reporte de Comunicados", periodLabel);
+              const doc = report.doc;
 
-              let y = 50;
-              doc.setFontSize(11);
-              doc.text('Título', 20, y);
-              doc.text('Enviado por', 90, y);
-              doc.text('Fecha', 140, y);
-              y += 8;
+              let y = report.getStartY() + 5;
+              
+              // Draw Table Header
+              drawTableHeader(doc, y, [
+                { text: "Título", x: 20 },
+                { text: "Enviado por", x: 90 },
+                { text: "Fecha", x: 140 }
+              ]);
+              y += 7;
 
               filtered.forEach(n => {
-                if (y > 270) { doc.addPage(); y = 20; }
-                doc.text(n.title, 20, y);
+                if (y > 250) { 
+                  report.addPage(); 
+                  y = report.getStartY() + 5;
+                  drawTableHeader(doc, y, [
+                    { text: "Título", x: 20 },
+                    { text: "Enviado por", x: 90 },
+                    { text: "Fecha", x: 140 }
+                  ]);
+                  y += 7;
+                }
+                
+                doc.setFont("Helvetica", "bold");
+                doc.setFontSize(9);
+                doc.text(n.title || "", 20, y);
+                doc.setFont("Helvetica", "normal");
                 doc.text(`${n.creator.firstName} ${n.creator.lastName}`, 90, y);
-                doc.text(new Date(n.date.toString()).toLocaleString(), 140, y);
-                y += 8;
+                doc.text(new Date(n.date.toString()).toLocaleDateString("es-ES"), 140, y);
+                y += 6;
                 
                 // Recipient info
                 const recipient = n.user ? `${n.user.firstName} ${n.user.lastName}` :
-                  n.courseParallel ? `${n.courseParallel.course.name} - ${n.courseParallel.parallel.name}` : '';
-                doc.text(`Para: ${recipient}`, 20, y);
-                y += 8;
+                  n.courseParallel ? `${n.courseParallel.course.name} - ${n.courseParallel.parallel.name}` : "Todos";
+                
+                doc.setFont("Helvetica", "bold");
+                doc.text(`Destinatario: `, 20, y);
+                doc.setFont("Helvetica", "normal");
+                doc.text(recipient, 42, y);
+                y += 6;
 
                 // Message content
-                const split = doc.splitTextToSize(n.message, 170);
+                const split = doc.splitTextToSize(n.message || "", 170);
+                doc.setFont("Helvetica", "italic");
+                doc.setTextColor(100, 100, 100);
                 split.forEach((line: string) => {
-                  if (y > 270) { doc.addPage(); y = 20; }
+                  if (y > 260) {
+                    report.addPage();
+                    y = report.getStartY() + 5;
+                  }
                   doc.text(line, 20, y);
-                  y += 6;
+                  y += 5;
                 });
-                y += 4;
+                doc.setTextColor(0, 0, 0); // reset color
+                
+                drawRowDivider(doc, y + 1);
+                y += 6;
               });
 
               doc.save(`${fileLabel}.pdf`);

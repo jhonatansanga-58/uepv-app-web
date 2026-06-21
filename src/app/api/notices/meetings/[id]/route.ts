@@ -24,10 +24,15 @@ export async function GET(
         student: {
           include: {
             user: true,
-            courseParallel: {
+            enrollments: {
+              where: { active: true },
               include: {
-                course: true,
-                parallel: true
+                courseParallel: {
+                  include: {
+                    course: true,
+                    parallel: true
+                  }
+                }
               }
             }
           }

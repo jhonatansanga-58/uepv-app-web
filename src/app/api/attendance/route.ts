@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     // 1. FLUJO BIOMÉTRICO (AFIS)
     if (body.probeBase64) {
       console.log("Biometric capture received. Fetching candidates for AFIS...");
-      
+
       // Obtener todas las huellas de estudiantes activos
       const candidates = await prisma.student.findMany({
         where: { user: { active: true }, fingerprint: { not: null } },
@@ -22,46 +22,46 @@ export async function POST(req: NextRequest) {
       });
 
       if (candidates.length === 0) {
-         return NextResponse.json({ error: "No hay huellas registradas en BD." }, { status: 404 });
+        return NextResponse.json({ error: "No hay huellas registradas en BD." }, { status: 404 });
       }
 
       // Preparar payload exacto para microservicio AFIS de Python (app.py)
       const payload = {
-         probe: body.probeBase64,
-         candidates: candidates.map(c => {
-             let templates = [];
-             try {
-                // Parseamos el string JSON guardado en base de datos ["b64..", "b64.."]
-                templates = JSON.parse(c.fingerprint || "[]");
-             } catch(e) {}
-             
-             return {
-                 id: c.id,
-                 templates: templates
-             };
-         })
+        probe: body.probeBase64,
+        candidates: candidates.map(c => {
+          let templates = [];
+          try {
+            // Parseamos el string JSON guardado en base de datos ["b64..", "b64.."]
+            templates = JSON.parse(c.fingerprint || "[]");
+          } catch (e) { }
+
+          return {
+            id: c.id,
+            templates: templates
+          };
+        })
       };
 
       try {
-         const afisReq = await fetch("http://127.0.0.1:5000/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-         });
+        const afisReq = await fetch("http://127.0.0.1:5000/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
-         const afisRes = await afisReq.json();
+        const afisRes = await afisReq.json();
 
-         // Flask microservice returns { "match": True, "studentId": best_id }
-         if (afisReq.ok && afisRes.match) {
-            studentId = afisRes.studentId;
-            console.log(`AFIS Match Success: Student ${studentId}`);
-         } else {
-            console.log("AFIS Match Failed:", afisRes);
-            return NextResponse.json({ error: "Huella no reconocida." }, { status: 404 });
-         }
+        // Flask microservice returns { "match": True, "studentId": best_id }
+        if (afisReq.ok && afisRes.match) {
+          studentId = afisRes.studentId;
+          console.log(`AFIS Match Success: Student ${studentId}`);
+        } else {
+          console.log("AFIS Match Failed:", afisRes);
+          return NextResponse.json({ error: "Huella no reconocida." }, { status: 404 });
+        }
       } catch (afisErr) {
-         console.error("AFIS Service unreachable:", afisErr);
-         return NextResponse.json({ error: "Servicio biométrico AFIS fuera de línea." }, { status: 503 });
+        console.error("AFIS Service unreachable:", afisErr);
+        return NextResponse.json({ error: "Servicio biométrico AFIS fuera de línea." }, { status: 503 });
       }
     }
 
@@ -80,16 +80,16 @@ export async function POST(req: NextRequest) {
     }
 
     // verify student exists and user active
-    const student = await prisma.student.findUnique({ 
-        include: { 
-            user: true,
-            enrollments: { 
-                 include: { courseParallel: { include: { course: true, parallel: true } } } 
-            }
-        }, 
-        where: { id: studentId } 
+    const student = await prisma.student.findUnique({
+      include: {
+        user: true,
+        enrollments: {
+          include: { courseParallel: { include: { course: true, parallel: true } } }
+        }
+      },
+      where: { id: studentId }
     });
-    
+
     if (!student || !student.user?.active) {
       return NextResponse.json({ error: "Student not found or inactive" }, { status: 404 });
     }
@@ -101,11 +101,11 @@ export async function POST(req: NextRequest) {
     const attendance = await prisma.attendance.create({
       data,
       include: {
-        student: { 
-             include: { 
-                 user: true,
-                 enrollments: { include: { courseParallel: { include: { course: true, parallel: true } } } } 
-             } 
+        student: {
+          include: {
+            user: true,
+            enrollments: { include: { courseParallel: { include: { course: true, parallel: true } } } }
+          }
         },
         user: { select: { id: true, firstName: true, lastName: true } },
       },
@@ -145,11 +145,11 @@ export async function POST(req: NextRequest) {
 
     // Return flat data for frontend UX and raw attendance
     return NextResponse.json({
-        ...attendance,
-        firstName: attendance.student?.user?.firstName || "",
-        lastName: attendance.student?.user?.lastName || "",
-        courseName: attendance.student?.enrollments?.[0]?.courseParallel?.course?.name || "Sin Curso",
-        parallelName: attendance.student?.enrollments?.[0]?.courseParallel?.parallel?.name || "Sin Paralelo"
+      ...attendance,
+      firstName: attendance.student?.user?.firstName || "",
+      lastName: attendance.student?.user?.lastName || "",
+      courseName: attendance.student?.enrollments?.[0]?.courseParallel?.course?.name || "Sin Curso",
+      parallelName: attendance.student?.enrollments?.[0]?.courseParallel?.parallel?.name || "Sin Paralelo"
     }, { status: 201 });
   } catch (error) {
     console.error("[POST /api/attendance]", error);
@@ -181,11 +181,11 @@ export async function GET(req: NextRequest) {
       where,
       orderBy: { date: "desc" },
       include: {
-        student: { 
-             include: { 
-                 user: true, 
-                 enrollments: { include: { courseParallel: { include: { course: true, parallel: true } } } } 
-             } 
+        student: {
+          include: {
+            user: true,
+            enrollments: { include: { courseParallel: { include: { course: true, parallel: true } } } }
+          }
         },
         user: { select: { id: true, firstName: true, lastName: true } },
       },

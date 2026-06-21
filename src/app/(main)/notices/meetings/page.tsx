@@ -9,6 +9,7 @@ import { useSession } from "next-auth/react";
 import ReportDateRangeModal from "@/components/reports/reportDateRangeModal";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
+import { initReportDoc, drawTableHeader, drawRowDivider } from "@/utils/pdfReport";
 
 interface User {
   id: number;
@@ -183,34 +184,57 @@ export default function MeetingsPage() {
               XLSX.utils.book_append_sheet(wb, ws, 'Reuniones');
               XLSX.writeFile(wb, `${fileLabel}.xlsx`);
             } else {
-              const doc = new jsPDF();
-              doc.setFontSize(16);
-              doc.text('REPORTE DE CITACIONES', 105, 20, { align: 'center' });
-              doc.setFontSize(12);
-              doc.text(`Período: ${f?.toLocaleDateString() || ''} - ${t?.toLocaleDateString() || ''}`, 20, 36);
+              const periodLabel = `${f ? f.toLocaleDateString("es-ES") : ""} - ${t ? t.toLocaleDateString("es-ES") : ""}`;
+              const report = initReportDoc("Reporte de Citaciones", periodLabel);
+              const doc = report.doc;
 
-              let y = 50;
-              doc.setFontSize(11);
-              doc.text('Tema', 20, y);
-              doc.text('Fecha y hora', 90, y);
-              doc.text('Estudiante', 130, y);
-              y += 8;
+              let y = report.getStartY() + 5;
+              
+              // Draw Table Header
+              drawTableHeader(doc, y, [
+                { text: "Tema", x: 20 },
+                { text: "Fecha y hora", x: 90 },
+                { text: "Estudiante", x: 130 }
+              ]);
+              y += 7;
 
               filtered.forEach(m => {
-                if (y > 270) { doc.addPage(); y = 20; }
-                doc.text(m.topic || '', 20, y);
-                doc.text(m.date ? new Date(m.date).toLocaleString() : '', 90, y);
-                doc.text(m.student && m.student.user ? `${m.student.user.firstName} ${m.student.user.lastName}` : '', 130, y);
-                y += 8;
-                // message as a small paragraph
-                const msg = m.message || '';
+                if (y > 250) { 
+                  report.addPage(); 
+                  y = report.getStartY() + 5;
+                  drawTableHeader(doc, y, [
+                    { text: "Tema", x: 20 },
+                    { text: "Fecha y hora", x: 90 },
+                    { text: "Estudiante", x: 130 }
+                  ]);
+                  y += 7;
+                }
+                
+                doc.setFont("Helvetica", "bold");
+                doc.setFontSize(9);
+                doc.text(m.topic || "", 20, y);
+                doc.setFont("Helvetica", "normal");
+                doc.text(m.date ? new Date(m.date).toLocaleString() : "", 90, y);
+                doc.text(m.student && m.student.user ? `${m.student.user.firstName} ${m.student.user.lastName}` : "", 130, y);
+                y += 6;
+                
+                // Message paragraph details
+                const msg = m.message ? `Motivo: ${m.message}` : "";
                 const split = doc.splitTextToSize(msg, 170);
+                doc.setFont("Helvetica", "italic");
+                doc.setTextColor(100, 100, 100);
                 split.forEach((line: string) => {
-                  if (y > 270) { doc.addPage(); y = 20; }
+                  if (y > 260) {
+                    report.addPage();
+                    y = report.getStartY() + 5;
+                  }
                   doc.text(line, 20, y);
-                  y += 6;
+                  y += 5;
                 });
-                y += 4;
+                doc.setTextColor(0, 0, 0); // reset color
+                
+                drawRowDivider(doc, y + 1);
+                y += 6;
               });
 
               doc.save(`${fileLabel}.pdf`);

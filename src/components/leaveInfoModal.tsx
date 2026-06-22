@@ -49,7 +49,10 @@ export default function LeaveInfoModal({ id: id, open: open, onClose, isAdmin, o
       });
   }, [id, open]);
 
-  const formatDate = (d?: string | null) =>
+  const formatCalendarDate = (d?: string | null) =>
+    d ? new Date(d).toLocaleString("es-BO", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }) : "No especificada";
+
+  const formatTimestamp = (d?: string | null) =>
     d ? new Date(d).toLocaleString("es-BO", { year: "numeric", month: "long", day: "numeric" }) : "No especificada";
 
   const statusLabel = (s: string) => {
@@ -73,9 +76,9 @@ export default function LeaveInfoModal({ id: id, open: open, onClose, isAdmin, o
                 <p><strong>Título:</strong> {leave.title}</p>
                 <p><strong>Estado:</strong> {statusLabel(leave.status)}</p>
                 <p><strong>Activo:</strong> {leave.active ? 'Sí' : 'No'}</p>
-                <p><strong>Solicitado:</strong> {formatDate(leave.requestDate)}</p>
-                <p><strong>Inicio:</strong> {formatDate(leave.startDate)}</p>
-                <p><strong>Fin:</strong> {formatDate(leave.endDate)}</p>
+                <p><strong>Solicitado:</strong> {formatTimestamp(leave.requestDate)}</p>
+                <p><strong>Inicio:</strong> {formatCalendarDate(leave.startDate)}</p>
+                <p><strong>Fin:</strong> {formatCalendarDate(leave.endDate)}</p>
               </div>
             </div>
 

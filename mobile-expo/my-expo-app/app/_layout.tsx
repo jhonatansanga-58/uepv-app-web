@@ -32,9 +32,10 @@ export default function RootLayout() {
     // When app is opened from quit
     messaging()
       .getInitialNotification()
-      .then(remoteMessage => {
+      .then((remoteMessage) => {
         if (remoteMessage) {
-          console.log('Initial notification caused app from quit state:',
+          console.log(
+            'Initial notification caused app from quit state:',
             remoteMessage.notification
           );
         }
@@ -42,7 +43,8 @@ export default function RootLayout() {
 
     // When app is opened from background
     messaging().onNotificationOpenedApp((remoteMessage) => {
-      console.log('Notification caused app to open from background state:',
+      console.log(
+        'Notification caused app to open from background state:',
         remoteMessage.notification
       );
     });
@@ -60,7 +62,5 @@ export default function RootLayout() {
     return unsubscribe;
   }, []);
 
-  return (
-    <Stack screenOptions={{ headerShown: false }} />
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

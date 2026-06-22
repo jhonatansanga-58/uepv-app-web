@@ -1,5 +1,5 @@
-import { Stack } from "expo-router";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Stack } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../../global.css';
 import React from 'react';
 

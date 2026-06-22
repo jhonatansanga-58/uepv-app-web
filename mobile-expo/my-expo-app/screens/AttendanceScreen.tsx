@@ -1,4 +1,3 @@
-
 /*import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';

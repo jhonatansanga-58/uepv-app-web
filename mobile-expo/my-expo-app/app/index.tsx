@@ -1,4 +1,4 @@
-import { Redirect } from "expo-router";
+import { Redirect } from 'expo-router';
 
 // This file simply fixes the "Unmatched Route" error.
 // It acts as the default / route when the app boots.

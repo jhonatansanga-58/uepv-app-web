@@ -15,10 +15,10 @@ export default function TasksScreen() {
     try {
       const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/mobile/notices/tasks`, {
         headers: {
-          'Authorization': `Bearer ${await AuthService.getToken()}`,
+          Authorization: `Bearer ${await AuthService.getToken()}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        }
+          Accept: 'application/json',
+        },
       });
       const data = await res.json();
       setTasks(data);
@@ -35,13 +35,10 @@ export default function TasksScreen() {
   return (
     <ScrollView
       className="flex-1 bg-gray-50"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <View className="p-4">
         {tasks.length === 0 ? (
-          <View className="bg-white rounded-lg p-4 items-center justify-center shadow-sm">
+          <View className="items-center justify-center rounded-lg bg-white p-4 shadow-sm">
             <Ionicons name="clipboard-outline" size={48} color={colors.gray[500]} />
             <Text className="mt-2 text-gray-500">No hay tareas disponibles</Text>
           </View>
@@ -50,7 +47,7 @@ export default function TasksScreen() {
             {tasks.map((task) => (
               <TouchableOpacity
                 key={task.id}
-                className={'bg-white p-4 rounded-lg shadow-sm border-l-4 border-primary-500'}
+                className={'rounded-lg border-l-4 border-primary-500 bg-white p-4 shadow-sm'}
                 onPress={() => {
                   router.push({
                     pathname: '/(main)/(drawer)/(notices)/tareas/details',
@@ -61,24 +58,36 @@ export default function TasksScreen() {
                       dueDate: task.dueDate,
                       subjectName: task.subject?.name ?? '',
                       courseName: task.courseParallel?.course?.name ?? '',
-                      parallelName: task.courseParallel?.parallel?.name ?? ''
-                    }
+                      parallelName: task.courseParallel?.parallel?.name ?? '',
+                    },
                   });
-                }}
-              >
+                }}>
                 <View className="flex-row justify-between">
-                  <Text className="text-lg font-medium text-gray-900" numberOfLines={1}>{task.title}</Text>
-                  <Text className="text-xs text-gray-500">{new Date(task.dueDate).toLocaleDateString()}</Text>
+                  <Text className="text-lg font-medium text-gray-900" numberOfLines={1}>
+                    {task.title}
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    {new Date(task.dueDate).toLocaleDateString()}
+                  </Text>
                 </View>
 
-                <View className="flex-row items-center justify-between mt-2">
+                <View className="mt-2 flex-row items-center justify-between">
                   <View className="flex-row items-center space-x-2">
-                    <View className="bg-primary-100 px-2 py-1 rounded">
-                      <Text className="text-xs text-primary-700">{task.subject?.name ?? 'Sin materia'}</Text>
+                    <View className="rounded bg-primary-100 px-2 py-1">
+                      <Text className="text-xs text-primary-700">
+                        {task.subject?.name ?? 'Sin materia'}
+                      </Text>
                     </View>
-                    <Text className="text-sm text-gray-600">{task.courseParallel?.course?.name ?? ''} {task.courseParallel?.parallel?.name ? `- ${task.courseParallel.parallel.name}` : ''}</Text>
+                    <Text className="text-sm text-gray-600">
+                      {task.courseParallel?.course?.name ?? ''}{' '}
+                      {task.courseParallel?.parallel?.name
+                        ? `- ${task.courseParallel.parallel.name}`
+                        : ''}
+                    </Text>
                   </View>
-                  <Text className="text-xs text-gray-400">{new Date(task.sendDate).toLocaleString()}</Text>
+                  <Text className="text-xs text-gray-400">
+                    {new Date(task.sendDate).toLocaleString()}
+                  </Text>
                 </View>
               </TouchableOpacity>
             ))}

@@ -1,4 +1,12 @@
-import { View, Text, TouchableOpacity, ScrollView, RefreshControl, Switch, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  RefreshControl,
+  Switch,
+  ActivityIndicator,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from 'constants/colors';
 import { useState, useCallback } from 'react';
@@ -44,13 +52,16 @@ export default function LeaveRequestsScreen() {
       const user = await AuthService.getCurrentUser();
       if (!user?.id) return;
       const token = await AuthService.getToken();
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/mobile/tutors/${user.id}/leaverequests`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      });
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/mobile/tutors/${user.id}/leaverequests`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        }
+      );
       const data = await res.json();
       setRequests(data || []);
     } catch (err) {
@@ -70,46 +81,45 @@ export default function LeaveRequestsScreen() {
   const toggleActive = async (id: number, current: boolean) => {
     const newValue = !current;
     // optimistic update
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, active: newValue } : r));
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, active: newValue } : r)));
     try {
       const token = await AuthService.getToken();
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/mobile/leaverequest/${id}/toggle`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({ active: newValue }),
-      });
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/mobile/leaverequest/${id}/toggle`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({ active: newValue }),
+        }
+      );
       if (!res.ok) {
         throw new Error(`Server responded ${res.status}`);
       }
       const updated = await res.json();
       // replace with server value to keep in sync
-      setRequests(prev => prev.map(r => r.id === id ? { ...r, ...updated } : r));
+      setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, ...updated } : r)));
     } catch (err) {
       console.error('Failed to update leave request', err);
       // revert optimistic change
-      setRequests(prev => prev.map(r => r.id === id ? { ...r, active: current } : r));
+      setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, active: current } : r)));
     }
   };
 
   return (
     <ScrollView
       className="flex-1 bg-gray-50"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={load} />
-      }
-    >
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}>
       <View className="p-4">
-
         {loading && requests.length === 0 ? (
-          <View className="flex-1 justify-center items-center">
+          <View className="flex-1 items-center justify-center">
             <ActivityIndicator />
           </View>
         ) : requests.length === 0 ? (
-          <View className="bg-white rounded-lg p-4 items-center justify-center shadow-sm">
+          <View className="items-center justify-center rounded-lg bg-white p-4 shadow-sm">
             <Ionicons name="document-text-outline" size={48} color={colors.gray[500]} />
             <Text className="mt-2 text-gray-500">No hay solicitudes de licencia</Text>
           </View>
@@ -118,21 +128,27 @@ export default function LeaveRequestsScreen() {
             {requests.map((req) => (
               <TouchableOpacity
                 key={req.id}
-                className={'bg-white p-4 rounded-lg shadow-sm flex-row items-center'}
+                className={'flex-row items-center rounded-lg bg-white p-4 shadow-sm'}
                 activeOpacity={0.8}
-                onPress={() => router.push(`(drawer)/(licences)/licencias/${req.id}`)}
-              >
-                <View style={{ width: 6, height: '100%', backgroundColor: statusColor(req.status), marginRight: 12, borderRadius: 4 }} />
+                onPress={() => router.push(`(drawer)/(licences)/licencias/${req.id}`)}>
+                <View
+                  style={{
+                    width: 6,
+                    height: '100%',
+                    backgroundColor: statusColor(req.status),
+                    marginRight: 12,
+                    borderRadius: 4,
+                  }}
+                />
 
                 <View className="flex-1">
                   <Text className="text-lg font-medium text-gray-900">{req.title}</Text>
-                  <Text className="text-sm text-gray-600 mt-1" numberOfLines={1}>
+                  <Text className="mt-1 text-sm text-gray-600" numberOfLines={1}>
                     {req.student?.user?.firstName} {req.student?.user?.lastName}
                   </Text>
-
                 </View>
                 <View className="ml-3 items-end justify-center">
-                  {(req.status === 'PENDING') ? (
+                  {req.status === 'PENDING' ? (
                     <Switch
                       value={!!req.active}
                       onValueChange={() => toggleActive(req.id, !!req.active)}
@@ -141,7 +157,9 @@ export default function LeaveRequestsScreen() {
                     <View className="h-8" />
                   )}
                   {req.requestDate && (
-                    <Text className="text-xs text-gray-500 mt-1">{new Date(req.requestDate).toLocaleString()}</Text>
+                    <Text className="mt-1 text-xs text-gray-500">
+                      {new Date(req.requestDate).toLocaleString()}
+                    </Text>
                   )}
                 </View>
               </TouchableOpacity>

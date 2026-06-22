@@ -11,7 +11,7 @@ const DrawerContent = (props: any) => {
 
   const handleLoginLogout = async () => {
     if (isAuthenticated) {
-      console.log("Cerrando sesión...");
+      console.log('Cerrando sesión...');
       await AuthService.logout();
       setIsAuthenticated(false);
       setUser(null);
@@ -42,35 +42,37 @@ const DrawerContent = (props: any) => {
 
   return (
     <View className="flex-1">
-      <View className="p-4 items-center border-b border-gray-200 mt-16">
+      <View className="mt-16 items-center border-b border-gray-200 p-4">
         <Image
           source={require('assets/escudo.png')}
-          className={Platform.OS === 'web' ? 'max-w-20 max-h-20 mb-4' : 'w-20 h-20 mb-4'}
+          className={Platform.OS === 'web' ? 'mb-4 max-h-20 max-w-20' : 'mb-4 h-20 w-20'}
         />
-        <Text className="text-lg font-bold text-center">Bienvenido {user}</Text>
+        <Text className="text-center text-lg font-bold">Bienvenido {user}</Text>
       </View>
 
       <DrawerContentScrollView {...props}>
-        <TouchableOpacity className="px-4 py-3 bg-primary-100 mb-2 rounded-xl" onPress={() => goTo('/(main)/(drawer)/attendances')}>
+        <TouchableOpacity
+          className="mb-2 rounded-xl bg-primary-100 px-4 py-3"
+          onPress={() => goTo('/(main)/(drawer)/attendances')}>
           <Text className="text-base text-primary-600">Asistencias</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity className="px-4 py-3 bg-primary-100 mb-2 rounded-xl" onPress={() => goTo('/(main)/(drawer)/(notices)/comunicados')}>
+        <TouchableOpacity
+          className="mb-2 rounded-xl bg-primary-100 px-4 py-3"
+          onPress={() => goTo('/(main)/(drawer)/(notices)/comunicados')}>
           <Text className="text-base text-primary-600">Comunicados</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity className="px-4 py-3 bg-primary-100 mb-2 rounded-xl" onPress={() => goTo('/(main)/(drawer)/(licences)/licencias')}>
+        <TouchableOpacity
+          className="mb-2 rounded-xl bg-primary-100 px-4 py-3"
+          onPress={() => goTo('/(main)/(drawer)/(licences)/licencias')}>
           <Text className="text-base text-primary-600">Licencias</Text>
         </TouchableOpacity>
-
       </DrawerContentScrollView>
 
-      <View className="p-4 border-t border-gray-200">
-        <TouchableOpacity
-          className="p-3 rounded-lg  bg-primary-500"
-          onPress={handleLoginLogout}
-        >
-          <Text className="text-white font-bold text-center">
+      <View className="border-t border-gray-200 p-4">
+        <TouchableOpacity className="rounded-lg bg-primary-500  p-3" onPress={handleLoginLogout}>
+          <Text className="text-center font-bold text-white">
             {isAuthenticated ? 'Cerrar Sesión' : 'Iniciar Sesión'}
           </Text>
         </TouchableOpacity>

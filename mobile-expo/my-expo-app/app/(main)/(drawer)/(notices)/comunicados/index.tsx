@@ -16,10 +16,10 @@ export default function NoticesScreen() {
       console.log(await AuthService.getToken());
       const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/mobile/notices/notifications`, {
         headers: {
-          'Authorization': `Bearer ${await AuthService.getToken()}`,
+          Authorization: `Bearer ${await AuthService.getToken()}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        }
+          Accept: 'application/json',
+        },
       });
       const data = await res.json();
       setNotifications(data);
@@ -36,22 +36,19 @@ export default function NoticesScreen() {
   return (
     <ScrollView
       className="flex-1 bg-gray-50"
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <View className="p-4">
         {notifications.length === 0 ? (
-          <View className="bg-white rounded-lg p-4 items-center justify-center shadow-sm">
+          <View className="items-center justify-center rounded-lg bg-white p-4 shadow-sm">
             <Ionicons name="notifications-off-outline" size={48} color={colors.gray[500]} />
             <Text className="mt-2 text-gray-500">No hay comunicados nuevos</Text>
           </View>
         ) : (
           <View className="space-y-3">
-            {notifications.map(notification => (
+            {notifications.map((notification) => (
               <TouchableOpacity
                 key={notification.id}
-                className={'bg-white p-4 rounded-lg shadow-sm border-l-4 border-primary-500'}
+                className={'rounded-lg border-l-4 border-primary-500 bg-white p-4 shadow-sm'}
                 onPress={() => {
                   router.push({
                     pathname: '/(main)/(drawer)/(notices)/comunicados/details',
@@ -60,14 +57,15 @@ export default function NoticesScreen() {
                       message: notification.message,
                       date: notification.date,
                       creatorFirstName: notification.creator.firstName,
-                      creatorLastName: notification.creator.lastName
-                    }
+                      creatorLastName: notification.creator.lastName,
+                    },
                   });
-                }}
-              >
+                }}>
                 <Text className="text-lg font-medium text-gray-900">{notification.title}</Text>
-                <Text className="text-sm text-gray-600 mt-1" numberOfLines={2}>{notification.message}</Text>
-                <View className="flex-row justify-end items-center mt-2">
+                <Text className="mt-1 text-sm text-gray-600" numberOfLines={2}>
+                  {notification.message}
+                </Text>
+                <View className="mt-2 flex-row items-center justify-end">
                   <Text className="text-xs text-gray-500">
                     {new Date(notification.date).toLocaleString()}
                   </Text>

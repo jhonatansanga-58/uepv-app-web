@@ -1,11 +1,19 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
-import { useState, useEffect } from "react";
-import { AuthService } from "services/auth";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { colors } from "constants/colors";
-import * as DocumentPicker from "expo-document-picker";
+import {
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
+import { useState, useEffect } from 'react';
+import { AuthService } from 'services/auth';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { colors } from 'constants/colors';
+import * as DocumentPicker from 'expo-document-picker';
 
 interface Student {
   id: number;
@@ -41,12 +49,12 @@ const validateForm = (
   const errors: ValidationErrors = {};
 
   if (!studentId) {
-    errors.student = "Seleccione un estudiante";
+    errors.student = 'Seleccione un estudiante';
   }
 
   const trimmedTitle = title.trim();
   if (!trimmedTitle) {
-    errors.title = "El título es obligatorio";
+    errors.title = 'El título es obligatorio';
   } else if (trimmedTitle.length < TITLE_MIN_LENGTH) {
     errors.title = `El título debe tener al menos ${TITLE_MIN_LENGTH} caracteres`;
   } else if (trimmedTitle.length > TITLE_MAX_LENGTH) {
@@ -55,7 +63,7 @@ const validateForm = (
 
   const trimmedMessage = message.trim();
   if (!trimmedMessage) {
-    errors.message = "El mensaje es obligatorio";
+    errors.message = 'El mensaje es obligatorio';
   } else if (trimmedMessage.length < MESSAGE_MIN_LENGTH) {
     errors.message = `El mensaje debe tener al menos ${MESSAGE_MIN_LENGTH} caracteres`;
   } else if (trimmedMessage.length > MESSAGE_MAX_LENGTH) {
@@ -64,7 +72,7 @@ const validateForm = (
 
   const trimmedReason = reason.trim();
   if (!trimmedReason) {
-    errors.reason = "El motivo es obligatorio";
+    errors.reason = 'El motivo es obligatorio';
   } else if (trimmedReason.length < REASON_MIN_LENGTH) {
     errors.reason = `El motivo debe tener al menos ${REASON_MIN_LENGTH} caracteres`;
   } else if (trimmedReason.length > REASON_MAX_LENGTH) {
@@ -72,7 +80,7 @@ const validateForm = (
   }
 
   if (startDate.getTime() > endDate.getTime()) {
-    errors.dates = "La fecha de fin no puede ser anterior a la fecha de inicio";
+    errors.dates = 'La fecha de fin no puede ser anterior a la fecha de inicio';
   }
 
   return errors;
@@ -82,16 +90,16 @@ const Register = () => {
   const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
   const [studentId, setStudentId] = useState<number | null>(null);
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [reason, setReason] = useState("");
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [reason, setReason] = useState('');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [showStudentDropdown, setShowStudentDropdown] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
@@ -116,7 +124,7 @@ const Register = () => {
             firstName: user.name.split(' ')[0],
             lastName: user.name.split(' ').slice(1).join(' '),
             course: '',
-            parallel: ''
+            parallel: '',
           });
           setStudents([]);
           return;
@@ -128,8 +136,8 @@ const Register = () => {
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-              Accept: "application/json",
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
             },
           }
         );
@@ -138,13 +146,13 @@ const Register = () => {
           id: s.id,
           firstName: s.firstName,
           lastName: s.lastName,
-          course: s.course ?? s.courseParallel?.course?.name ?? "",
-          parallel: s.parallel ?? s.courseParallel?.parallel?.name ?? "",
+          course: s.course ?? s.courseParallel?.course?.name ?? '',
+          parallel: s.parallel ?? s.courseParallel?.parallel?.name ?? '',
         }));
         setStudents(items);
       } catch (err) {
-        console.error("Failed to load students", err);
-        setError("Error al cargar estudiantes");
+        console.error('Failed to load students', err);
+        setError('Error al cargar estudiantes');
       } finally {
         setLoadingStudents(false);
       }
@@ -154,19 +162,19 @@ const Register = () => {
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "application/pdf"], // Allow images and PDFs
-        copyToCacheDirectory: true
+        type: ['image/*', 'application/pdf'], // Allow images and PDFs
+        copyToCacheDirectory: true,
       });
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setEvidenceFile(result.assets[0]);
       }
     } catch (err) {
-      console.error("Error picking document:", err);
+      console.error('Error picking document:', err);
     }
   };
 
   const handleSubmit = async () => {
-    setError("");
+    setError('');
     setValidationErrors({});
 
     const errors = validateForm(studentId, title, message, reason, startDate, endDate);
@@ -180,41 +188,38 @@ const Register = () => {
       const token = await AuthService.getToken();
 
       const formData = new FormData();
-      formData.append("studentId", String(studentId));
-      formData.append("title", title.trim());
-      formData.append("message", message.trim());
-      formData.append("reason", reason.trim());
-      formData.append("startDate", startDate.toISOString().split("T")[0]);
-      formData.append("endDate", endDate.toISOString().split("T")[0]);
+      formData.append('studentId', String(studentId));
+      formData.append('title', title.trim());
+      formData.append('message', message.trim());
+      formData.append('reason', reason.trim());
+      formData.append('startDate', startDate.toISOString().split('T')[0]);
+      formData.append('endDate', endDate.toISOString().split('T')[0]);
 
       if (evidenceFile) {
-        formData.append("evidence", {
+        formData.append('evidence', {
           uri: evidenceFile.uri,
           name: evidenceFile.name,
-          type: evidenceFile.mimeType || 'application/octet-stream'
+          type: evidenceFile.mimeType || 'application/octet-stream',
         } as any);
       }
 
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/mobile/leaverequest`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            // Do not set Content-Type, FormData sets it automatically with boundary
-            Accept: "application/json",
-          },
-          body: formData,
-        }
-      );
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/mobile/leaverequest`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Do not set Content-Type, FormData sets it automatically with boundary
+          Accept: 'application/json',
+        },
+        body: formData,
+      });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data?.error || "Error al registrar la licencia");
+        throw new Error(data?.error || 'Error al registrar la licencia');
       }
 
-      setTitle("");
-      setMessage("");
-      setReason("");
+      setTitle('');
+      setMessage('');
+      setReason('');
       if (userRole !== 'STUDENT') {
         setStudentId(null);
         setSelectedStudent(null);
@@ -222,14 +227,13 @@ const Register = () => {
       setStartDate(new Date());
       setEndDate(new Date());
       setEvidenceFile(null);
-      Alert.alert("Éxito", "Licencia registrada correctamente");
-      router.replace("(drawer)/(licences)/licencias");
-
+      Alert.alert('Éxito', 'Licencia registrada correctamente');
+      router.replace('(drawer)/(licences)/licencias');
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Error desconocido";
+      const errorMsg = err instanceof Error ? err.message : 'Error desconocido';
       setError(errorMsg);
-      Alert.alert("Error", errorMsg);
-      console.error("Failed to register leave", err);
+      Alert.alert('Error', errorMsg);
+      console.error('Failed to register leave', err);
     } finally {
       setIsLoading(false);
     }
@@ -243,7 +247,7 @@ const Register = () => {
 
   if (loadingStudents) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className="flex-1 items-center justify-center bg-gray-50">
         <ActivityIndicator />
       </View>
     );
@@ -251,44 +255,43 @@ const Register = () => {
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <View className="p-4 space-y-4 shadow-sm">
+      <View className="space-y-4 p-4 shadow-sm">
         {error && (
-          <View className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <Text className="text-red-700 text-sm">{error}</Text>
+          <View className="rounded-lg border border-red-200 bg-red-50 p-3">
+            <Text className="text-sm text-red-700">{error}</Text>
           </View>
         )}
 
         {/* Student Selection */}
         {userRole !== 'STUDENT' && (
           <View>
-            <Text className="text-sm font-medium text-gray-700 mb-2">Estudiante *</Text>
+            <Text className="mb-2 text-sm font-medium text-gray-700">Estudiante *</Text>
             <TouchableOpacity
-              className={`bg-white border rounded-lg p-3 flex-row justify-between items-center ${validationErrors.student ? "border-red-300" : "border-gray-300"
-                }`}
-              onPress={() => setShowStudentDropdown(!showStudentDropdown)}
-            >
-              <Text className={selectedStudent ? "text-gray-900" : "text-gray-500"}>
+              className={`flex-row items-center justify-between rounded-lg border bg-white p-3 ${
+                validationErrors.student ? 'border-red-300' : 'border-gray-300'
+              }`}
+              onPress={() => setShowStudentDropdown(!showStudentDropdown)}>
+              <Text className={selectedStudent ? 'text-gray-900' : 'text-gray-500'}>
                 {selectedStudent
                   ? `${selectedStudent.firstName} ${selectedStudent.lastName} - ${selectedStudent.course} ${selectedStudent.parallel}`
-                  : "Seleccionar estudiante"}
+                  : 'Seleccionar estudiante'}
               </Text>
               <Ionicons
-                name={showStudentDropdown ? "chevron-up" : "chevron-down"}
+                name={showStudentDropdown ? 'chevron-up' : 'chevron-down'}
                 size={20}
                 color={colors.gray[500]}
               />
             </TouchableOpacity>
             {validationErrors.student && (
-              <Text className="text-red-500 text-xs mt-1">{validationErrors.student}</Text>
+              <Text className="mt-1 text-xs text-red-500">{validationErrors.student}</Text>
             )}
             {showStudentDropdown && (
-              <View className="bg-white border border-gray-300 border-t-0 rounded-b-lg max-h-64">
+              <View className="max-h-64 rounded-b-lg border border-t-0 border-gray-300 bg-white">
                 {students.map((student) => (
                   <TouchableOpacity
                     key={student.id}
                     className="border-b border-gray-200 p-3"
-                    onPress={() => selectStudent(student)}
-                  >
+                    onPress={() => selectStudent(student)}>
                     <Text className="text-gray-900">
                       {student.firstName} {student.lastName} - {student.course} {student.parallel}
                     </Text>
@@ -301,15 +304,16 @@ const Register = () => {
 
         {/* Title */}
         <View>
-          <View className="flex-row justify-between items-center mb-2">
+          <View className="mb-2 flex-row items-center justify-between">
             <Text className="text-sm font-medium text-gray-700">Título *</Text>
             <Text className="text-xs text-gray-500">
               {title.length}/{TITLE_MAX_LENGTH}
             </Text>
           </View>
           <TextInput
-            className={`bg-white border rounded-lg p-3 text-gray-900 ${validationErrors.title ? "border-red-300" : "border-gray-300"
-              }`}
+            className={`rounded-lg border bg-white p-3 text-gray-900 ${
+              validationErrors.title ? 'border-red-300' : 'border-gray-300'
+            }`}
             placeholder="Mín. 5 caracteres"
             value={title}
             onChangeText={setTitle}
@@ -317,21 +321,22 @@ const Register = () => {
             maxLength={TITLE_MAX_LENGTH}
           />
           {validationErrors.title && (
-            <Text className="text-red-500 text-xs mt-1">{validationErrors.title}</Text>
+            <Text className="mt-1 text-xs text-red-500">{validationErrors.title}</Text>
           )}
         </View>
 
         {/* Message */}
         <View>
-          <View className="flex-row justify-between items-center mb-2">
+          <View className="mb-2 flex-row items-center justify-between">
             <Text className="text-sm font-medium text-gray-700">Mensaje *</Text>
             <Text className="text-xs text-gray-500">
               {message.length}/{MESSAGE_MAX_LENGTH}
             </Text>
           </View>
           <TextInput
-            className={`bg-white border rounded-lg p-3 text-gray-900 ${validationErrors.message ? "border-red-300" : "border-gray-300"
-              }`}
+            className={`rounded-lg border bg-white p-3 text-gray-900 ${
+              validationErrors.message ? 'border-red-300' : 'border-gray-300'
+            }`}
             placeholder="Mín. 10 caracteres"
             value={message}
             onChangeText={setMessage}
@@ -342,21 +347,22 @@ const Register = () => {
             maxLength={MESSAGE_MAX_LENGTH}
           />
           {validationErrors.message && (
-            <Text className="text-red-500 text-xs mt-1">{validationErrors.message}</Text>
+            <Text className="mt-1 text-xs text-red-500">{validationErrors.message}</Text>
           )}
         </View>
 
         {/* Reason */}
         <View>
-          <View className="flex-row justify-between items-center mb-2">
+          <View className="mb-2 flex-row items-center justify-between">
             <Text className="text-sm font-medium text-gray-700">Motivo *</Text>
             <Text className="text-xs text-gray-500">
               {reason.length}/{REASON_MAX_LENGTH}
             </Text>
           </View>
           <TextInput
-            className={`bg-white border rounded-lg p-3 text-gray-900 ${validationErrors.reason ? "border-red-300" : "border-gray-300"
-              }`}
+            className={`rounded-lg border bg-white p-3 text-gray-900 ${
+              validationErrors.reason ? 'border-red-300' : 'border-gray-300'
+            }`}
             placeholder="Mín. 5 caracteres"
             value={reason}
             onChangeText={setReason}
@@ -367,22 +373,21 @@ const Register = () => {
             maxLength={REASON_MAX_LENGTH}
           />
           {validationErrors.reason && (
-            <Text className="text-red-500 text-xs mt-1">{validationErrors.reason}</Text>
+            <Text className="mt-1 text-xs text-red-500">{validationErrors.reason}</Text>
           )}
         </View>
 
         {/* Dates Section */}
         <View>
-          <Text className="text-sm font-medium text-gray-700 mb-3">Fechas *</Text>
+          <Text className="mb-3 text-sm font-medium text-gray-700">Fechas *</Text>
           <View className="flex-row gap-3">
             {/* Start Date */}
             <View className="flex-1">
-              <Text className="text-xs text-gray-600 mb-1">Inicio</Text>
+              <Text className="mb-1 text-xs text-gray-600">Inicio</Text>
               <TouchableOpacity
-                className="bg-white border border-gray-300 rounded-lg p-3 flex-row items-center justify-between"
+                className="flex-row items-center justify-between rounded-lg border border-gray-300 bg-white p-3"
                 onPress={() => setShowStartPicker(true)}
-                disabled={isLoading}
-              >
+                disabled={isLoading}>
                 <Text className="text-gray-900">{startDate.toLocaleDateString()}</Text>
                 <Ionicons name="calendar-outline" size={20} color={colors.gray[500]} />
               </TouchableOpacity>
@@ -395,7 +400,7 @@ const Register = () => {
                     setShowStartPicker(false);
                     if (date) {
                       setStartDate(date);
-                      setValidationErrors(prev => ({ ...prev, dates: "" }));
+                      setValidationErrors((prev) => ({ ...prev, dates: '' }));
                     }
                   }}
                   minimumDate={new Date()}
@@ -405,12 +410,11 @@ const Register = () => {
 
             {/* End Date */}
             <View className="flex-1">
-              <Text className="text-xs text-gray-600 mb-1">Fin</Text>
+              <Text className="mb-1 text-xs text-gray-600">Fin</Text>
               <TouchableOpacity
-                className="bg-white border border-gray-300 rounded-lg p-3 flex-row items-center justify-between"
+                className="flex-row items-center justify-between rounded-lg border border-gray-300 bg-white p-3"
                 onPress={() => setShowEndPicker(true)}
-                disabled={isLoading}
-              >
+                disabled={isLoading}>
                 <Text className="text-gray-900">{endDate.toLocaleDateString()}</Text>
                 <Ionicons name="calendar-outline" size={20} color={colors.gray[500]} />
               </TouchableOpacity>
@@ -423,7 +427,7 @@ const Register = () => {
                     setShowEndPicker(false);
                     if (date) {
                       setEndDate(date);
-                      setValidationErrors(prev => ({ ...prev, dates: "" }));
+                      setValidationErrors((prev) => ({ ...prev, dates: '' }));
                     }
                   }}
                   minimumDate={startDate}
@@ -432,40 +436,39 @@ const Register = () => {
             </View>
           </View>
           {validationErrors.dates && (
-            <Text className="text-red-500 text-xs mt-1">{validationErrors.dates}</Text>
+            <Text className="mt-1 text-xs text-red-500">{validationErrors.dates}</Text>
           )}
         </View>
 
         {/* File Picker Section */}
         <View className="mt-2">
-          <Text className="text-sm font-medium text-gray-700 mb-2">Evidencia (📸 Imagen / PDF)</Text>
+          <Text className="mb-2 text-sm font-medium text-gray-700">
+            Evidencia (📸 Imagen / PDF)
+          </Text>
           <TouchableOpacity
-            className="bg-white border border-dashed border-primary-500 rounded-lg p-4 flex-row items-center justify-center space-x-2"
-            onPress={pickDocument}
-          >
+            className="flex-row items-center justify-center space-x-2 rounded-lg border border-dashed border-primary-500 bg-white p-4"
+            onPress={pickDocument}>
             <Ionicons name="cloud-upload-outline" size={24} color={colors.primary[500]} />
-            <Text className="text-primary-600 font-medium">
-              {evidenceFile ? evidenceFile.name : "Subir archivo (opcional)"}
+            <Text className="font-medium text-primary-600">
+              {evidenceFile ? evidenceFile.name : 'Subir archivo (opcional)'}
             </Text>
           </TouchableOpacity>
           {evidenceFile && (
             <TouchableOpacity className="mt-2 self-center" onPress={() => setEvidenceFile(null)}>
-              <Text className="text-red-500 text-sm">Eliminar archivo adjunto</Text>
+              <Text className="text-sm text-red-500">Eliminar archivo adjunto</Text>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Submit Button */}
         <TouchableOpacity
-          className={`p-3 rounded-lg flex-row justify-center items-center mt-6 mb-4 ${isLoading || !studentId
-              ? "bg-gray-300"
-              : "bg-primary-500"
-            }`}
+          className={`mb-4 mt-6 flex-row items-center justify-center rounded-lg p-3 ${
+            isLoading || !studentId ? 'bg-gray-300' : 'bg-primary-500'
+          }`}
           onPress={handleSubmit}
-          disabled={isLoading || !studentId}
-        >
-          <Text className="text-white font-medium">
-            {isLoading ? "Registrando..." : "Registrar licencia"}
+          disabled={isLoading || !studentId}>
+          <Text className="font-medium text-white">
+            {isLoading ? 'Registrando...' : 'Registrar licencia'}
           </Text>
         </TouchableOpacity>
       </View>

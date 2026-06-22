@@ -1,0 +1,27 @@
+# EAS Build ignore file
+# Since EAS CLI packages the entire git repository by default,
+# we ignore the web application and backend Python services here to keep the archive small.
+
+# Ignore web application files
+node_modules/
+.next/
+.vercel/
+src/
+public/
+prisma/
+verify-student.js
+patch-flowbite.js
+service-account.json
+ts_errors.txt
+
+# Ignore local Python AFIS service (especially virtual environments)
+afis-service/
+venv/
+**/venv/
+
+# Ignore mobile-specific temporary/build files
+mobile-expo/my-expo-app/node_modules/
+mobile-expo/my-expo-app/android/
+mobile-expo/my-expo-app/ios/
+mobile-expo/my-expo-app/.expo/
+mobile-expo/my-expo-app/dist/

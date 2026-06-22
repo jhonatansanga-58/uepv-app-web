@@ -165,8 +165,23 @@ export default function NewLeavePage() {
           <Label htmlFor="startDate">Fecha de inicio *</Label>
           <Datepicker
             id="startDate"
-            value={startDate ? new Date(startDate) : undefined}
-            onChange={date => setStartDate(date ? date.toISOString().split("T")[0] : "")}
+            value={startDate ? (() => {
+              const [y, m, d] = startDate.split("-").map(Number);
+              return new Date(y, m - 1, d, 12, 0, 0);
+            })() : undefined}
+            onChange={date => {
+              if (date) {
+                const adjusted = new Date(
+                  date.getFullYear(),
+                  date.getMonth(),
+                  date.getDate(),
+                  12, 0, 0
+                );
+                setStartDate(adjusted.toISOString().split("T")[0]);
+              } else {
+                setStartDate("");
+              }
+            }}
           />
           {formErrors.startDate && <span className="text-red-500 text-sm mt-1 block">{formErrors.startDate}</span>}
         </div>
@@ -174,8 +189,23 @@ export default function NewLeavePage() {
           <Label htmlFor="endDate">Fecha de fin *</Label>
           <Datepicker
             id="endDate"
-            value={endDate ? new Date(endDate) : undefined}
-            onChange={date => setEndDate(date ? date.toISOString().split("T")[0] : "")}
+            value={endDate ? (() => {
+              const [y, m, d] = endDate.split("-").map(Number);
+              return new Date(y, m - 1, d, 12, 0, 0);
+            })() : undefined}
+            onChange={date => {
+              if (date) {
+                const adjusted = new Date(
+                  date.getFullYear(),
+                  date.getMonth(),
+                  date.getDate(),
+                  12, 0, 0
+                );
+                setEndDate(adjusted.toISOString().split("T")[0]);
+              } else {
+                setEndDate("");
+              }
+            }}
           />
           {formErrors.endDate && <span className="text-red-500 text-sm mt-1 block">{formErrors.endDate}</span>}
         </div>

@@ -317,8 +317,23 @@ export default function CreateStudentForm() {
               name="birthDate"
               render={({ field }) => (
                 <Datepicker
-                  value={field.value ? new Date(field.value) : undefined}
-                  onChange={(date) => field.onChange(date ? date.toISOString().split("T")[0] : "")}
+                  value={field.value ? (() => {
+                    const [y, m, d] = field.value.split("-").map(Number);
+                    return new Date(y, m - 1, d, 12, 0, 0);
+                  })() : undefined}
+                  onChange={(date) => {
+                    if (date) {
+                      const adjusted = new Date(
+                        date.getFullYear(),
+                        date.getMonth(),
+                        date.getDate(),
+                        12, 0, 0
+                      );
+                      field.onChange(adjusted.toISOString().split("T")[0]);
+                    } else {
+                      field.onChange("");
+                    }
+                  }}
                 />
               )}
             />

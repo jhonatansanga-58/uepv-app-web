@@ -11,6 +11,32 @@ import { initReportDoc, drawTableHeader, drawRowDivider } from "@/utils/pdfRepor
 
 type StudentMinimal = { id: number; label: string };
 
+const dateStringToDate = (dateString: string) => {
+  if (!dateString) return undefined;
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
+};
+
+const handleDateChange = (date: Date | null, setter: (val: string) => void) => {
+  if (date) {
+    const adjustedDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      12, 0, 0
+    );
+    setter(adjustedDate.toISOString().split("T")[0]);
+  } else {
+    setter("");
+  }
+};
+
+const formatPeriodDate = (dateStr: string) => {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}/${year}`;
+};
+
 export default function AttendancesHistoryPage() {
   const { data: session } = useSession();
   const [query, setQuery] = useState("");
@@ -141,16 +167,16 @@ export default function AttendancesHistoryPage() {
         <div>
           <label className="block text-sm text-gray-700 mb-1">Desde</label>
           <Datepicker
-            value={fromDate ? new Date(fromDate) : undefined}
-            onChange={(d) => setFromDate(d ? (d as Date).toISOString().split("T")[0] : "")}
+            value={fromDate ? dateStringToDate(fromDate) : undefined}
+            onChange={(d) => handleDateChange(d, setFromDate)}
           />
         </div>
 
         <div>
           <label className="block text-sm text-gray-700 mb-1">Hasta</label>
           <Datepicker
-            value={toDate ? new Date(toDate) : undefined}
-            onChange={(d) => setToDate(d ? (d as Date).toISOString().split("T")[0] : "")}
+            value={toDate ? dateStringToDate(toDate) : undefined}
+            onChange={(d) => handleDateChange(d, setToDate)}
           />
         </div>
       </div>
@@ -222,7 +248,7 @@ export default function AttendancesHistoryPage() {
                 ['REPORTE DE ASISTENCIAS'],
                 [],
                 ['Estudiante:', studentInfo?.label || ''],
-                ['Período:', `${new Date(fromDate).toLocaleDateString()} - ${new Date(toDate).toLocaleDateString()}`],
+                ['Período:', `${formatPeriodDate(fromDate)} - ${formatPeriodDate(toDate)}`],
                 [],
                 ['Fecha y hora', 'Registrado por']
               ];
@@ -243,7 +269,7 @@ export default function AttendancesHistoryPage() {
               XLSX.writeFile(wb, `asistencias_${studentInfo?.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
             } else {
               // Create PDF with custom styling helper
-              const periodLabel = `${new Date(fromDate).toLocaleDateString("es-ES")} - ${new Date(toDate).toLocaleDateString("es-ES")}`;
+              const periodLabel = `${formatPeriodDate(fromDate)} - ${formatPeriodDate(toDate)}`;
               const report = initReportDoc("Reporte de Asistencias", periodLabel);
               const doc = report.doc;
 

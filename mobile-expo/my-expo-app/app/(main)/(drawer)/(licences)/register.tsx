@@ -187,13 +187,20 @@ const Register = () => {
     try {
       const token = await AuthService.getToken();
 
+      const formatLocalStr = (d: Date) => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
       const formData = new FormData();
       formData.append('studentId', String(studentId));
       formData.append('title', title.trim());
       formData.append('message', message.trim());
       formData.append('reason', reason.trim());
-      formData.append('startDate', startDate.toISOString().split('T')[0]);
-      formData.append('endDate', endDate.toISOString().split('T')[0]);
+      formData.append('startDate', formatLocalStr(startDate));
+      formData.append('endDate', formatLocalStr(endDate));
 
       if (evidenceFile) {
         formData.append('evidence', {

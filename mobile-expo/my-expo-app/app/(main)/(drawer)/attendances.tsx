@@ -110,8 +110,14 @@ export default function AttendancesScreen() {
     setLoading(true);
     try {
       const token = await AuthService.getToken();
-      const from = fromDate.toISOString().split('T')[0];
-      const to = toDate.toISOString().split('T')[0];
+      const formatLocalStr = (d: Date) => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      const from = formatLocalStr(fromDate);
+      const to = formatLocalStr(toDate);
 
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/mobile/attendance?studentId=${selectedStudent.id}&from=${from}&to=${to}`,

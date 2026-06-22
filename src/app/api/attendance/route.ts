@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
 
       if (tutorTokens.length > 0) {
         const notificationTitle = 'Asistencia Registrada';
-        const notificationBody = `Se registró asistencia para ${attendance.student?.user?.firstName} ${attendance.student?.user?.lastName} el ${new Date(attendance.date).toLocaleDateString('es-BO')} a las ${new Date(attendance.date).toLocaleTimeString('es-BO')}`;
+        const notificationBody = `Se registró asistencia para ${attendance.student?.user?.firstName} ${attendance.student?.user?.lastName} el ${new Date(attendance.date).toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' })} a las ${new Date(attendance.date).toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' })}`;
 
         const notificationData = {
           attendanceId: String(attendance.id),

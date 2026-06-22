@@ -188,8 +188,8 @@ export async function GET(req: NextRequest) {
     const where: any = { studentId };
     if (from || to) {
       where.date = {};
-      if (from) where.date.gte = new Date(from);
-      if (to) where.date.lte = new Date(to);
+      if (from) where.date.gte = new Date(`${from}T00:00:00.000-04:00`);
+      if (to) where.date.lte = new Date(`${to}T23:59:59.999-04:00`);
     }
 
     const attendances = await prisma.attendance.findMany({

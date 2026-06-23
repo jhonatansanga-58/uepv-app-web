@@ -258,22 +258,17 @@ export default function LandingPage() {
       {/* FOOTER */}
       <Footer container className="rounded-none bg-gray-900 border-none">
         <div className="w-full text-center py-6">
-          <div className="w-full justify-between sm:flex sm:items-center sm:justify-between px-6">
+          <div className="w-full flex flex-col items-center justify-center px-6">
             <FooterBrand
               href="/"
               src="/escudo.png"
               alt="Logo"
               name="U.E. Plenitud de Vida"
-              className="text-white grayscale brightness-200"
+              className="text-white font-bold"
             />
-            <FooterLinkGroup className="mt-4 sm:mt-0 text-gray-400">
-              <FooterLink href="#">Política de Privacidad</FooterLink>
-              <FooterLink href="#">Términos y Condiciones</FooterLink>
-              <FooterLink href="/login">Portal de Acceso</FooterLink>
-            </FooterLinkGroup>
           </div>
           <FooterDivider className="border-gray-700" />
-          <FooterCopyright href="#" by="Unidad Educativa Plenitud de Vida™" year={new Date().getFullYear()} className="text-gray-400" />
+          <FooterCopyright href="#" by="Unidad Educativa Plenitud de Vida™" year={new Date().getFullYear()} className="text-white font-medium" />
         </div>
       </Footer>
 

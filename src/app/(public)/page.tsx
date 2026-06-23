@@ -35,14 +35,14 @@ const FadeInOnScroll = ({ children, delay = 0 }: { children: React.ReactNode, de
 };
 
 const galeriaImages = [
-  { src: "/uploads/galeria/606470966_848227088090770_7587415631469486590_n.jpg", title: "Formación Integral", category: "Institucional" },
-  { src: "/uploads/galeria/606900402_848228438090635_3800107391574496770_n.jpg", title: "Actividades Educativas", category: "Clases" },
-  { src: "/uploads/galeria/607189727_848226638090815_4251707252550476263_n.jpg", title: "Nuestra Comunidad", category: "Comunidad" },
-  { src: "/uploads/galeria/659942572_17999759768871605_7037841057776690567_n.jpg", title: "Proyectos Escolares", category: "Ciencia" },
-  { src: "/uploads/galeria/662570371_928038110109667_2012240045729115854_n.jpg", title: "Festejos y Celebraciones", category: "Eventos" },
-  { src: "/uploads/galeria/670278795_18001016708871605_5627482049882211248_n.jpg", title: "Desfiles Institucionales", category: "Cultura" },
-  { src: "/uploads/galeria/674466613_936399755940169_3517819518502560274_n.jpg", title: "Enseñanza Interactiva", category: "Aula" },
-  { src: "/uploads/galeria/677708515_941389012107910_1605623893910700497_n.jpg", title: "Creatividad y Arte", category: "Talleres" }
+  { src: "/uploads/galeria/606470966_848227088090770_7587415631469486590_n.jpg", title: "Acto de Graduación", category: "Ceremonias" },
+  { src: "/uploads/galeria/606900402_848228438090635_3800107391574496770_n.jpg", title: "Entrega de Diplomas", category: "Ceremonias" },
+  { src: "/uploads/galeria/607189727_848226638090815_4251707252550476263_n.jpg", title: "Discurso del Director", category: "Institucional" },
+  { src: "/uploads/galeria/659942572_17999759768871605_7037841057776690567_n.jpg", title: "Estudiantes con Uniforme Deportivo", category: "Deportes" },
+  { src: "/uploads/galeria/662570371_928038110109667_2012240045729115854_n.jpg", title: "Promo '26 en Granja Pairumani", category: "Salidas" },
+  { src: "/uploads/galeria/670278795_18001016708871605_5627482049882211248_n.jpg", title: "Clase Práctica de Cocina", category: "Clases" },
+  { src: "/uploads/galeria/674466613_936399755940169_3517819518502560274_n.jpg", title: "Presentaciones y Teatro", category: "Cultura" },
+  { src: "/uploads/galeria/677708515_941389012107910_1605623893910700497_n.jpg", title: "Encuentro con Misión de Noruega", category: "Comunidad" }
 ];
 
 export default function LandingPage() {

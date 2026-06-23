@@ -34,6 +34,17 @@ const FadeInOnScroll = ({ children, delay = 0 }: { children: React.ReactNode, de
   );
 };
 
+const galeriaImages = [
+  { src: "/uploads/galeria/606470966_848227088090770_7587415631469486590_n.jpg", title: "Formación Integral", category: "Institucional" },
+  { src: "/uploads/galeria/606900402_848228438090635_3800107391574496770_n.jpg", title: "Actividades Educativas", category: "Clases" },
+  { src: "/uploads/galeria/607189727_848226638090815_4251707252550476263_n.jpg", title: "Nuestra Comunidad", category: "Comunidad" },
+  { src: "/uploads/galeria/659942572_17999759768871605_7037841057776690567_n.jpg", title: "Proyectos Escolares", category: "Ciencia" },
+  { src: "/uploads/galeria/662570371_928038110109667_2012240045729115854_n.jpg", title: "Festejos y Celebraciones", category: "Eventos" },
+  { src: "/uploads/galeria/670278795_18001016708871605_5627482049882211248_n.jpg", title: "Desfiles Institucionales", category: "Cultura" },
+  { src: "/uploads/galeria/674466613_936399755940169_3517819518502560274_n.jpg", title: "Enseñanza Interactiva", category: "Aula" },
+  { src: "/uploads/galeria/677708515_941389012107910_1605623893910700497_n.jpg", title: "Creatividad y Arte", category: "Talleres" }
+];
+
 export default function LandingPage() {
   const { status } = useSession();
   const portalHref = status === "authenticated" ? "/dashboard" : "/login";
@@ -48,7 +59,7 @@ export default function LandingPage() {
             UEPV
           </span>
           <span className="self-center whitespace-nowrap text-xl font-bold text-[var(--color-primary-900)] hidden sm:inline-block">
-            Unidad Educativa
+            U.E. Plenitud de Vida
           </span>
         </NavbarBrand>
         <div className="flex md:order-2 space-x-2 items-center">
@@ -157,28 +168,25 @@ export default function LandingPage() {
             </div>
           </FadeInOnScroll>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <FadeInOnScroll delay={100}>
-              <div className="bg-gray-200 h-48 md:h-64 rounded-xl overflow-hidden relative group">
-                <div className="absolute inset-0 bg-gray-300 flex items-center justify-center text-gray-500 font-medium">Imagen Aula 1</div>
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <span className="text-white font-semibold">Instalaciones</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {galeriaImages.map((image, index) => (
+              <FadeInOnScroll key={index} delay={index * 100}>
+                <div className="group relative overflow-hidden rounded-2xl bg-white shadow-md hover:shadow-xl transition-all duration-300 aspect-[4/3] cursor-pointer border border-gray-100">
+                  <img 
+                    src={image.src} 
+                    alt={image.title} 
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+                  <div className="absolute bottom-0 left-0 w-full p-4 text-white transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-[var(--color-secondary-600)] text-white mb-2 inline-block shadow-sm">
+                      {image.category}
+                    </span>
+                    <h3 className="text-sm md:text-base font-bold truncate">{image.title}</h3>
+                  </div>
                 </div>
-              </div>
-            </FadeInOnScroll>
-            <FadeInOnScroll delay={200}>
-              <div className="col-span-2 bg-gray-200 h-48 md:h-64 rounded-xl overflow-hidden relative group">
-                <div className="absolute inset-0 bg-gray-300 flex items-center justify-center text-gray-500 font-medium">Actividad Deportiva / Principal</div>
-                <div className="absolute inset-0 bg-[var(--color-primary-900)]/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <span className="text-white font-semibold flex items-center gap-2">Ver más detalles</span>
-                </div>
-              </div>
-            </FadeInOnScroll>
-            <FadeInOnScroll delay={300}>
-               <div className="bg-gray-200 h-48 md:h-64 rounded-xl overflow-hidden relative group">
-                <div className="absolute inset-0 bg-gray-300 flex items-center justify-center text-gray-500 font-medium">Laboratorio</div>
-              </div>
-            </FadeInOnScroll>
+              </FadeInOnScroll>
+            ))}
           </div>
         </div>
       </section>
@@ -202,7 +210,7 @@ export default function LandingPage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-lg">Dirección</h4>
-                        <p className="text-purple-200">Av. Principal #123, Ciudad, País.</p>
+                        <p className="text-purple-200 text-sm md:text-base leading-snug">Calle Rafael Pavón entre Av. Suárez Miranda y Calle 23 de marzo</p>
                       </div>
                     </li>
                     <li className="flex items-start gap-4">
@@ -211,7 +219,7 @@ export default function LandingPage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-lg">Teléfono</h4>
-                        <p className="text-purple-200">+591 60000000</p>
+                        <p className="text-purple-200 text-sm md:text-base">77442889</p>
                       </div>
                     </li>
                     <li className="flex items-start gap-4">
@@ -220,25 +228,27 @@ export default function LandingPage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-lg">Correo Electrónico</h4>
-                        <p className="text-purple-200">info@colegio.edu</p>
+                        <p className="text-purple-200 text-sm md:text-base">ueplenituddevida@gmail.com</p>
                       </div>
                     </li>
                   </ul>
                 </FadeInOnScroll>
               </div>
-              <div className="p-10 md:p-16 bg-gray-50 flex items-center justify-center min-h-[400px]">
-                {/* Mapa Placeholder */}
-                 <FadeInOnScroll delay={200}>
-                  <div className="w-full text-center">
-                    <div className="w-full h-64 bg-gray-200 rounded-xl mb-4 flex items-center justify-center shadow-inner border border-gray-300">
-                      <span className="text-gray-500 flex flex-col items-center">
-                        <HiLocationMarker className="w-12 h-12 mb-2 text-gray-400" />
-                        [Widget de Google Maps aquí]
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-500">Pronto podrás visualizar nuestra ubicación satelital.</p>
+              <div className="bg-gray-50 p-6 md:p-10 flex items-center justify-center min-h-[400px]">
+                <FadeInOnScroll delay={200}>
+                  <div className="w-[85vw] max-w-[450px] md:w-[450px] lg:w-[500px] h-[350px] md:h-[400px] shadow-lg rounded-2xl overflow-hidden border border-gray-200">
+                    <iframe 
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d690.3554782800943!2d-66.28088855311515!3d-17.38824839540674!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x93e30b59c33d08a3%3A0xc55f3017e206f49c!2sUNIDAD%20EDUCATIVA%20PLENITUD%20DE%20VIDA!5e1!3m2!1ses!2sbo!4v1782190170231!5m2!1ses!2sbo" 
+                      width="100%" 
+                      height="100%" 
+                      style={{ border: 0 }} 
+                      allowFullScreen 
+                      loading="lazy" 
+                      referrerPolicy="no-referrer-when-downgrade"
+                      className="w-full h-full"
+                    ></iframe>
                   </div>
-                 </FadeInOnScroll>
+                </FadeInOnScroll>
               </div>
             </div>
           </div>
@@ -253,7 +263,7 @@ export default function LandingPage() {
               href="/"
               src="/escudo.png"
               alt="Logo"
-              name="Unidad Educativa"
+              name="U.E. Plenitud de Vida"
               className="text-white grayscale brightness-200"
             />
             <FooterLinkGroup className="mt-4 sm:mt-0 text-gray-400">
@@ -263,7 +273,7 @@ export default function LandingPage() {
             </FooterLinkGroup>
           </div>
           <FooterDivider className="border-gray-700" />
-          <FooterCopyright href="#" by="Unidad Educativa™" year={new Date().getFullYear()} className="text-gray-400" />
+          <FooterCopyright href="#" by="Unidad Educativa Plenitud de Vida™" year={new Date().getFullYear()} className="text-gray-400" />
         </div>
       </Footer>
 

@@ -207,12 +207,19 @@ export default function CreateStudentForm() {
   };
 
   const [fingerprintBase64, setFingerprintBase64] = useState("");
+  const [isLocal, setIsLocal] = useState(true);
 
   const selectedCourseId = watch("courseId");
 
   useEffect(() => {
     fetch("/api/courses").then((res) => res.json()).then(setCourses);
     fetch("/api/tutors").then((res) => res.json()).then(setTutors);
+
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const local = hostname === "localhost" || hostname === "127.0.0.1" || hostname.includes("192.168.");
+      setIsLocal(local);
+    }
   }, []);
 
   useEffect(() => {
@@ -395,12 +402,43 @@ export default function CreateStudentForm() {
 
           <div className="md:col-span-2 mt-4">
             <Label className="mb-2 block">Autenticación Biométrica (Requerido)</Label>
-            <FingerprintScanner
-              key={scannerResetKey}
-              onCapture={(base64) => {
-                setFingerprintBase64(base64);
-              }}
-            />
+            {isLocal ? (
+              <FingerprintScanner
+                key={scannerResetKey}
+                onCapture={(base64) => {
+                  setFingerprintBase64(base64);
+                }}
+              />
+            ) : (
+              <div className="p-4 border border-yellow-300 bg-yellow-50/50 rounded-lg space-y-3">
+                <p className="text-sm text-yellow-800 leading-relaxed">
+                  ⚠️ <strong>Entorno en la Nube (Vercel):</strong> La captura de huellas dactilares reales requiere ejecutar la aplicación de forma local para conectarse al hardware del lector.
+                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-1">
+                  <span className="text-xs text-gray-500">Para demostración en la nube, autocompleta con una huella de prueba:</span>
+                  <Button 
+                    type="button" 
+                    size="sm" 
+                    color="warning" 
+                    onClick={() => {
+                      const mockFingerprint = JSON.stringify([
+                        "V1NhbXBsZUZpbmdlcnByaW50VGVtcGxhdGVDYW5kaWRhdGUxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEx",
+                        "V1NhbXBsZUZpbmdlcnByaW50VGVtcGxhdGVDYW5kaWRhdGUyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj"
+                      ]);
+                      setFingerprintBase64(mockFingerprint);
+                      toast.success("¡Huella simulada agregada correctamente!");
+                    }}
+                  >
+                    Simular Captura de Huella
+                  </Button>
+                </div>
+                {fingerprintBase64 && (
+                  <p className="text-xs text-green-600 font-semibold flex items-center gap-1">
+                    ✓ Huella cargada para registro (Simulación)
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="md:col-span-2 text-right mt-6">

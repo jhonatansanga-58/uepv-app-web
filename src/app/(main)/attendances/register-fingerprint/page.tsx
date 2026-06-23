@@ -17,6 +17,15 @@ export default function RegisterFingerprintAttendance() {
   const [scannerResetKey, setScannerResetKey] = useState(0);
   const [matchResult, setMatchResult] = useState<MatchResult>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLocal, setIsLocal] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const local = hostname === "localhost" || hostname === "127.0.0.1" || hostname.includes("192.168.");
+      setIsLocal(local);
+    }
+  }, []);
 
   const handleCapture = async (probeBase64: string) => {
     setIsProcessing(true);
@@ -62,6 +71,32 @@ export default function RegisterFingerprintAttendance() {
       }, 1500);
     }
   };
+
+  if (!isLocal) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full min-h-[70vh] p-4">
+        <Card className="w-full max-w-lg shadow-xl border-yellow-400 bg-yellow-50/50 p-6 text-center">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-3xl font-bold mb-2">
+              ⚠
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800">Modo de Nube (Vercel)</h2>
+            <p className="text-gray-600 leading-relaxed">
+              El registro biométrico de asistencia requiere interactuar directamente con los puertos USB y el hardware local de esta PC.
+            </p>
+            <div className="bg-white border rounded-lg p-4 text-left text-sm text-gray-500 w-full mt-4 space-y-2">
+              <p className="font-semibold text-gray-700">Para probar esta funcionalidad en la defensa:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Ejecute el sistema de forma local: <code className="bg-gray-100 px-1 py-0.5 rounded text-red-600 font-mono">npm run dev</code>.</li>
+                <li>Conecte el lector de huellas USB.</li>
+                <li>Asegúrese de tener encendido el servicio biométrico local (Python AFIS).</li>
+              </ol>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -68,8 +68,15 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: "Huella no reconocida." }, { status: 404 });
         }
       } catch (afisErr) {
-        console.error("AFIS Service unreachable:", afisErr);
-        return NextResponse.json({ error: "Servicio biométrico AFIS fuera de línea." }, { status: 503 });
+        console.warn("AFIS Service unreachable, attempting exact database fallback match for simulation:", afisErr);
+        // Fallback simulation: find an active student whose fingerprint column contains this exact probe string
+        const exactMatch = candidates.find(c => c.fingerprint && c.fingerprint.includes(body.probeBase64));
+        if (exactMatch) {
+          studentId = exactMatch.id;
+          console.log(`Simulation Match Success (Fallback): Student ${studentId}`);
+        } else {
+          return NextResponse.json({ error: "Servicio biométrico AFIS fuera de línea o huella no coincide." }, { status: 503 });
+        }
       }
     }
 

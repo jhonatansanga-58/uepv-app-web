@@ -420,13 +420,16 @@ export default function CreateStudentForm() {
                     type="button" 
                     size="sm" 
                     color="warning" 
-                    onClick={() => {
-                      const mockFingerprint = JSON.stringify([
-                        "V1NhbXBsZUZpbmdlcnByaW50VGVtcGxhdGVDYW5kaWRhdGUxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEx",
-                        "V1NhbXBsZUZpbmdlcnByaW50VGVtcGxhdGVDYW5kaWRhdGUyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMj"
-                      ]);
-                      setFingerprintBase64(mockFingerprint);
-                      toast.success("¡Huella simulada agregada correctamente!");
+                    onClick={async () => {
+                      try {
+                        const res = await fetch("/mock-fingerprint.json");
+                        if (!res.ok) throw new Error("No se pudo cargar la huella simulada.");
+                        const data = await res.json();
+                        setFingerprintBase64(data.fingerprint);
+                        toast.success("¡Huella real simulada cargada con éxito!");
+                      } catch (err: any) {
+                        toast.error(err.message || "Falla al cargar huella simulada.");
+                      }
                     }}
                   >
                     Simular Captura de Huella

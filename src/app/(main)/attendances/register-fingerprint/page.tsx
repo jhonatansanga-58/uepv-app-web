@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Card } from "flowbite-react";
+import { Card, Button } from "flowbite-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import FingerprintScanner from "@/components/FingerprintScanner";
@@ -72,28 +72,88 @@ export default function RegisterFingerprintAttendance() {
     }
   };
 
+  const handleSimulateCapture = async () => {
+    setIsProcessing(true);
+    try {
+      const res = await fetch("/mock-fingerprint.json");
+      if (!res.ok) throw new Error("No se pudo cargar la huella simulada.");
+      const data = await res.json();
+      
+      // Parse the fingerprint array string
+      let templates: string[] = [];
+      try {
+        templates = JSON.parse(data.fingerprint || "[]");
+      } catch (e) {
+        throw new Error("Formato de huella inválido en mock-fingerprint.json");
+      }
+
+      if (!Array.isArray(templates) || templates.length === 0) {
+        throw new Error("No se encontraron plantillas en la huella simulada.");
+      }
+
+      // Use the first template as the probe fingerprint
+      const probeBase64 = templates[0];
+      await handleCapture(probeBase64);
+    } catch (err: any) {
+      toast.error(err.message || "Falla al cargar huella simulada.");
+      setIsProcessing(false);
+    }
+  };
+
   if (!isLocal) {
     return (
       <div className="flex flex-col items-center justify-center w-full min-h-[70vh] p-4">
-        <Card className="w-full max-w-lg shadow-xl border-yellow-400 bg-yellow-50/50 p-6 text-center">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-3xl font-bold mb-2">
-              ⚠
+        <ToastContainer position="bottom-center" autoClose={3000} hideProgressBar />
+
+        {matchResult ? (
+          <Card className="w-full max-w-lg shadow-xl border-green-400 bg-green-50 text-center py-10 transition-all duration-300 transform scale-105">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="w-20 h-20 bg-green-400 text-white rounded-full flex items-center justify-center text-4xl mb-4 shadow-lg">
+                ✓
+              </div>
+              <h2 className="text-4xl font-extrabold text-green-700">
+                {matchResult.firstName} {matchResult.lastName}
+              </h2>
+              <p className="text-xl font-medium text-green-600">
+                {matchResult.courseName} "{matchResult.parallelName}"
+              </p>
+              <p className="text-md text-gray-500 mt-6">Asistencia registrada exitosamente (Simulado)</p>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800">Modo de Nube (Vercel)</h2>
-            <p className="text-gray-600 leading-relaxed">
-              El registro biométrico de asistencia requiere interactuar directamente con los puertos USB y el hardware local de esta PC.
-            </p>
-            <div className="bg-white border rounded-lg p-4 text-left text-sm text-gray-500 w-full mt-4 space-y-2">
-              <p className="font-semibold text-gray-700">Para probar esta funcionalidad en la defensa:</p>
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Ejecute el sistema de forma local: <code className="bg-gray-100 px-1 py-0.5 rounded text-red-600 font-mono">npm run dev</code>.</li>
-                <li>Conecte el lector de huellas USB.</li>
-                <li>Asegúrese de tener encendido el servicio biométrico local (Python AFIS).</li>
-              </ol>
+          </Card>
+        ) : (
+          <Card className="w-full max-w-lg shadow-xl border-yellow-400 bg-yellow-50/50 p-6 text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-3xl font-bold mb-2">
+                ⚠
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800">Modo de Nube (Vercel)</h2>
+              <p className="text-gray-600 leading-relaxed">
+                El registro biométrico de asistencia requiere interactuar directamente con los puertos USB y el hardware local de esta PC.
+              </p>
+              <div className="bg-white border rounded-lg p-4 text-left text-sm text-gray-500 w-full mt-4 space-y-2">
+                <p className="font-semibold text-gray-700">Para probar esta funcionalidad en la defensa:</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Ejecute el sistema de forma local: <code className="bg-gray-100 px-1 py-0.5 rounded text-red-600 font-mono">npm run dev</code>.</li>
+                  <li>Conecte el lector de huellas USB.</li>
+                  <li>Asegúrese de tener encendido el servicio biométrico local (Python AFIS).</li>
+                </ol>
+              </div>
+
+              <div className="flex flex-col items-center justify-center gap-2 pt-4 w-full border-t border-yellow-200 mt-2">
+                <span className="text-xs text-gray-500 font-semibold">¿Desea simular una lectura de huella para probar el flujo completo en la nube?</span>
+                <Button 
+                  type="button" 
+                  size="md" 
+                  color="warning" 
+                  disabled={isProcessing}
+                  onClick={handleSimulateCapture}
+                >
+                  {isProcessing ? "Analizando en BD..." : "Simular Lectura de Huella"}
+                </Button>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
       </div>
     );
   }
@@ -132,6 +192,19 @@ export default function RegisterFingerprintAttendance() {
             {isProcessing && (
               <p className="text-center text-blue-600 mt-4 animate-pulse font-semibold">Analizando huella en la BD...</p>
             )}
+
+            <div className="flex flex-col items-center justify-center gap-2 pt-4 w-full border-t border-gray-100 mt-4">
+              <span className="text-xs text-gray-400">¿Falla en el lector?</span>
+              <Button 
+                type="button" 
+                size="sm" 
+                color="warning" 
+                disabled={isProcessing}
+                onClick={handleSimulateCapture}
+              >
+                {isProcessing ? "Analizando..." : "Simular Lectura de Huella"}
+              </Button>
+            </div>
           </Card>
         )}
       </div>

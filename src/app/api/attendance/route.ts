@@ -9,14 +9,12 @@ export async function POST(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     const body = await req.json();
 
-    // If NOT biometric flow, enforce authentication and role check (ADMIN/TEACHER only)
-    if (!body.probeBase64) {
-      if (!token?.sub || !token?.role) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-      if (token.role !== 'ADMIN' && token.role !== 'TEACHER') {
-        return NextResponse.json({ error: "Only admins and teachers can manually register attendances" }, { status: 403 });
-      }
+    // Enforce authentication and role check (ADMIN/TEACHER only) for all attendance registrations
+    if (!token?.sub || !token?.role) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (token.role !== 'ADMIN' && token.role !== 'TEACHER') {
+      return NextResponse.json({ error: "Only administrators and teachers can register attendances" }, { status: 403 });
     }
 
     let studentId = Number(body.studentId ?? body.student?.id);

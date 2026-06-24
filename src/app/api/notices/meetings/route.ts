@@ -147,16 +147,36 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json();
-    const { studentId, topic, message } = data;
+    const { studentId: initialStudentId, topic, message } = data;
+    let studentId = initialStudentId;
 
     // Verify student exists and fetch tokens
-    const student = await prisma.student.findUnique({
+    let student = await prisma.student.findUnique({
       where: { id: studentId },
       include: {
         user: true,
         tutorships: { include: { tutor: true } }
       }
     });
+
+    if (!student) {
+      // Si el ID no corresponde a un estudiante, verificamos si corresponde a un tutor y buscamos su primer estudiante asociado
+      const tutorship = await prisma.studentTutor.findFirst({
+        where: { tutorId: studentId },
+        include: {
+          student: {
+            include: {
+              user: true,
+              tutorships: { include: { tutor: true } }
+            }
+          }
+        }
+      });
+      if (tutorship) {
+        student = tutorship.student;
+        studentId = student.id;
+      }
+    }
 
     if (!student) {
       return NextResponse.json(

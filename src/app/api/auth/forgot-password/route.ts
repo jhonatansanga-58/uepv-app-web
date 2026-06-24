@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const token = jwt.sign(payload, secret, { expiresIn: "15m" });
 
     // Link a redirigir
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = req.nextUrl.origin;
     const resetLink = `${baseUrl}/reset-password?token=${token}`;
 
     const transporter = nodemailer.createTransport({

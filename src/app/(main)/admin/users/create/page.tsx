@@ -174,7 +174,8 @@ export default function CreateUserPage() {
   const getWhatsAppLink = () => {
     if (!credentialsData || !credentialsData.phone) return "#";
     const { userName, rawPassword, firstName, lastName } = credentialsData;
-    const message = `*Unidad Educativa Plenitud de Vida*\n\nEstimado(a) *${firstName} ${lastName}*, le compartimos sus credenciales de acceso al Portal Académico:\n\n*Usuario:* ${userName}\n*Contraseña temporal:* ${rawPassword}\n\n*Acceso:* http://localhost:3000\n\n_*Nota:* El sistema le solicitará cambiar su contraseña al ingresar por primera vez._`;
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+    const message = `*Unidad Educativa Plenitud de Vida*\n\nEstimado(a) *${firstName} ${lastName}*, le compartimos sus credenciales de acceso al Portal Académico:\n\n*Usuario:* ${userName}\n*Contraseña temporal:* ${rawPassword}\n\n*Acceso:* ${baseUrl}\n\n_*Nota:* El sistema le solicitará cambiar su contraseña al ingresar por primera vez._`;
     const cleanPhone = credentialsData.phone.replace(/\D/g, ""); // leave only digits
     return `https://wa.me/591${cleanPhone}?text=${encodeURIComponent(message)}`;
   };

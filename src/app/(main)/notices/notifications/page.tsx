@@ -9,7 +9,7 @@ import NotificationCreateModal from "@/components/notices/notificationCreateModa
 import ReportDateRangeModal from "@/components/reports/reportDateRangeModal";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import { initReportDoc, drawTableHeader, drawRowDivider } from "@/utils/pdfReport";
+import { initReportDoc, drawTableHeader, drawRowDivider, drawReportSummaryBox } from "@/utils/pdfReport";
 
 interface User {
   id: number;
@@ -216,6 +216,13 @@ export default function NotificationsPage() {
               const doc = report.doc;
 
               let y = report.getStartY() + 5;
+
+              // Draw metadata summary box
+              const summaryBoxHeight = drawReportSummaryBox(doc, y, [
+                { label: "Total de comunicados encontrados", value: filtered.length },
+                { label: "Generado por", value: session?.user?.name || "Administrador" }
+              ]);
+              y += summaryBoxHeight + 8;
               
               // Draw Table Header
               drawTableHeader(doc, y, [

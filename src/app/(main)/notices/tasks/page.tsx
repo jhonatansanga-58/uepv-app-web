@@ -8,7 +8,7 @@ import TaskDisableModal from "@/components/notices/taskDisableModal";
 import ReportDateRangeModal from "@/components/reports/reportDateRangeModal";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import { initReportDoc, drawTableHeader, drawRowDivider } from "@/utils/pdfReport";
+import { initReportDoc, drawTableHeader, drawRowDivider, drawReportSummaryBox } from "@/utils/pdfReport";
 
 interface Subject {
   id: number;
@@ -187,6 +187,12 @@ export default function TasksPage() {
               const doc = report.doc;
 
               let y = report.getStartY() + 5;
+
+              // Draw metadata summary box
+              const summaryBoxHeight = drawReportSummaryBox(doc, y, [
+                { label: "Total de tareas encontradas", value: filtered.length }
+              ]);
+              y += summaryBoxHeight + 8;
               
               // Draw Table Header
               drawTableHeader(doc, y, [

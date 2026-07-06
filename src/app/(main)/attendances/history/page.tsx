@@ -7,7 +7,7 @@ import ReportFormatModal from "@/components/reports/reportFormatModal";
 import { useSession } from "next-auth/react";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import { initReportDoc, drawTableHeader, drawRowDivider } from "@/utils/pdfReport";
+import { initReportDoc, drawTableHeader, drawRowDivider, drawSummaryCards, drawAttendanceProgressBar, drawAttendanceChart } from "@/utils/pdfReport";
 
 type StudentMinimal = { id: number; label: string };
 
@@ -268,6 +268,70 @@ export default function AttendancesHistoryPage() {
               // Generate Excel file
               XLSX.writeFile(wb, `asistencias_${studentInfo?.label.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.xlsx`);
             } else {
+              // Fetch latest attendances and approved leaves in one request
+              const statsRes = await fetch(`/api/attendance?studentId=${studentId}&from=${fromDate}&to=${toDate}&stats=true`);
+              if (!statsRes.ok) throw new Error("Failed to load report data");
+              const { attendances: atts, leaves } = await statsRes.json();
+
+              // 1. Calculate Weekdays (Mon-Fri) in the range
+              const countWeekdays = (startStr: string, endStr: string): number => {
+                const start = new Date(startStr + "T00:00:00");
+                const end = new Date(endStr + "T00:00:00");
+                let count = 0;
+                const cur = new Date(start);
+                while (cur <= end) {
+                  const day = cur.getDay();
+                  if (day !== 0 && day !== 6) { // Weekday
+                    count++;
+                  }
+                  cur.setDate(cur.getDate() + 1);
+                }
+                return count;
+              };
+              const diasHabiles = countWeekdays(fromDate, toDate);
+
+              // 2. Count unique weekdays where there is an attendance record
+              const presentDays = new Set<string>();
+              atts.forEach((a: any) => {
+                const d = new Date(a.date);
+                const day = d.getDay();
+                if (day !== 0 && day !== 6) { // Weekdays only
+                  presentDays.add(d.toISOString().split('T')[0]);
+                }
+              });
+              const presentCount = presentDays.size;
+
+              // 3. Count unique weekdays with approved leave
+              const leaveDays = new Set<string>();
+              const start = new Date(fromDate + "T00:00:00");
+              const end = new Date(toDate + "T00:00:00");
+              const cur = new Date(start);
+              while (cur <= end) {
+                const day = cur.getDay();
+                if (day !== 0 && day !== 6) {
+                  const dateStr = cur.toISOString().split('T')[0];
+                  const isLeave = leaves.some((l: any) => {
+                    if (!l.startDate || !l.endDate) return false;
+                    const lStart = new Date(l.startDate.split('T')[0] + "T00:00:00");
+                    const lEnd = new Date(l.endDate.split('T')[0] + "T23:59:59");
+                    const curDay = new Date(dateStr + "T12:00:00");
+                    return curDay >= lStart && curDay <= lEnd;
+                  });
+                  if (isLeave) {
+                    leaveDays.add(dateStr);
+                  }
+                }
+                cur.setDate(cur.getDate() + 1);
+              }
+              // Subtract days where student had leave but still checked in
+              const leaveCount = Array.from(leaveDays).filter(d => !presentDays.has(d)).length;
+
+              // 4. Absences
+              const absenceCount = Math.max(0, diasHabiles - presentCount - leaveCount);
+
+              // 5. Attendance percentage
+              const percentage = diasHabiles > 0 ? (presentCount / diasHabiles) * 100 : 0;
+
               // Create PDF with custom styling helper
               const periodLabel = `${formatPeriodDate(fromDate)} - ${formatPeriodDate(toDate)}`;
               const report = initReportDoc("Reporte de Asistencias", periodLabel);
@@ -280,7 +344,40 @@ export default function AttendancesHistoryPage() {
               doc.setFont("Helvetica", "normal");
               doc.text(studentInfo?.label || "", 40, report.getStartY());
 
-              let y = report.getStartY() + 10;
+              let y = report.getStartY() + 8;
+
+              // Draw Summary metrics cards
+              drawSummaryCards(doc, y, presentCount, leaveCount, absenceCount);
+              y += 30;
+
+              // Draw Attendance Progress bar
+              drawAttendanceProgressBar(doc, y, percentage);
+              y += 15;
+
+              // Draw Comparative chart
+              doc.setFont("Helvetica", "bold");
+              doc.setFontSize(10);
+              doc.setTextColor(60, 60, 60);
+              doc.text("COMPARATIVA DE ESTADOS (DÍAS HÁBILES)", 15, y);
+              y += 5;
+              drawAttendanceChart(doc, y, presentCount, leaveCount, absenceCount);
+              y += 38;
+
+              // Description paragraph
+              doc.setFont("Helvetica", "normal");
+              doc.setFontSize(8.5);
+              doc.setTextColor(100, 100, 100);
+              const summaryText = `Durante el período del ${formatPeriodDate(fromDate)} al ${formatPeriodDate(toDate)}, se contabilizaron un total de ${diasHabiles} días hábiles de clases. El estudiante registró asistencia en ${presentCount} días, justificó su ausencia con licencia en ${leaveCount} días, y se registró un total de ${absenceCount} faltas injustificadas.`;
+              const splitText = doc.splitTextToSize(summaryText, 180);
+              doc.text(splitText, 15, y);
+              y += splitText.length * 4.5 + 5;
+
+              // Detailed markings table title
+              doc.setFont("Helvetica", "bold");
+              doc.setFontSize(10);
+              doc.setTextColor(60, 60, 60);
+              doc.text("DETALLE DE MARCACIONES", 15, y);
+              y += 12; // Increased spacing to prevent overlap with the table header background
 
               // Table header
               drawTableHeader(doc, y, [
@@ -290,7 +387,7 @@ export default function AttendancesHistoryPage() {
               y += 7;
 
               // Table content
-              attendances.forEach((a) => {
+              atts.forEach((a: any) => {
                 if (y > 260) {
                   report.addPage();
                   y = report.getStartY() + 10;

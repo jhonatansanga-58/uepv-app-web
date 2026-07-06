@@ -184,6 +184,7 @@ export async function GET(req: NextRequest) {
     const studentId = Number(searchParams.get("studentId") || "");
     const from = searchParams.get("from");
     const to = searchParams.get("to");
+    const stats = searchParams.get("stats") === "true";
 
     if (Number.isNaN(studentId)) {
       return NextResponse.json({ error: "studentId is required" }, { status: 400 });
@@ -210,6 +211,26 @@ export async function GET(req: NextRequest) {
         user: { select: { id: true, firstName: true, lastName: true } },
       },
     });
+
+    if (stats) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const whereLeaves: any = {
+        studentId,
+        status: "APPROVED",
+      };
+      if (to) {
+        whereLeaves.startDate = { lte: new Date(`${to}T23:59:59.999-04:00`) };
+      }
+      if (from) {
+        whereLeaves.endDate = { gte: new Date(`${from}T00:00:00.000-04:00`) };
+      }
+
+      const leaves = await prisma.leaveRequest.findMany({
+        where: whereLeaves,
+      });
+
+      return NextResponse.json({ attendances, leaves });
+    }
 
     return NextResponse.json(attendances);
   } catch (error) {

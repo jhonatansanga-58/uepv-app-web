@@ -86,7 +86,7 @@ export default function LeaveInfoModal({ id: id, open: open, onClose, isAdmin, o
               <h3 className="text-base font-semibold text-gray-800 mb-2">Estudiante</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <p><strong>Nombre:</strong> {leave.student.user.firstName} {leave.student.user.lastName}</p>
-                <p><strong>Curso:</strong> {leave.student.courseParallel?.course?.name || 'No asignado'}</p>
+                <p><strong>Curso:</strong> {leave.student.courseParallel?.course?.name ? `${leave.student.courseParallel.course.name} ${leave.student.courseParallel.parallel?.name || ''}` : 'No asignado'}</p>
               </div>
             </div>
 

@@ -16,7 +16,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const leave = await prisma.leaveRequest.findUnique({
       where: { id },
       include: {
-        student: { include: { user: true, enrollments: { include: { courseParallel: { include: { course: true } } } } } },
+        student: {
+          include: {
+            user: true,
+            enrollments: {
+              include: {
+                courseParallel: {
+                  include: {
+                    course: true,
+                    parallel: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         tutor: true,
       },
     });
@@ -36,6 +50,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const result = {
       ...leave,
+      student: {
+        ...leave.student,
+        courseParallel: leave.student.enrollments?.[0]?.courseParallel ?? null,
+      },
       studentCourse: leave.student?.enrollments?.[0]?.courseParallel?.course ?? null,
       counts: { approvedCount, pendingCount, rejectedCount },
     };

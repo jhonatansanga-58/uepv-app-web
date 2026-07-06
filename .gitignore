@@ -43,3 +43,8 @@ next-env.d.ts
 /src/generated/prisma
 
 service-account.json
+
+# Python
+__pycache__/
+*.pyc
+afis-service/venv/

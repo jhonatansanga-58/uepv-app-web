@@ -8,6 +8,11 @@ export async function GET(request: Request) {
 
     // Lista general de estudiantes
     const allStudents = await prisma.student.findMany({
+      where: {
+        user: {
+          active: true,
+        },
+      },
       select: {
         id: true,
         user: {
@@ -36,7 +41,14 @@ export async function GET(request: Request) {
 
       // Obtener estudiantes asignados al tutor usando StudentTutor
       const assignedStudents = await (prisma as any).studentTutor.findMany({
-        where: { tutorId },
+        where: {
+          tutorId,
+          student: {
+            user: {
+              active: true,
+            },
+          },
+        },
         select: {
           student: {
             select: {

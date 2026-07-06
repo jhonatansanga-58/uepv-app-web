@@ -6,6 +6,7 @@ export async function GET() {
     const students = await prisma.user.findMany({
       where: {
         role: "TUTOR",
+        active: true,
       },
       select: {
         id: true,

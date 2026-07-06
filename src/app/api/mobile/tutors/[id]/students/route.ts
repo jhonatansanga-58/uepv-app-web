@@ -63,7 +63,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const studentTutors = await prisma.studentTutor.findMany({
-      where: { tutorId },
+      where: {
+        tutorId,
+        student: {
+          user: {
+            active: true,
+          },
+        },
+      },
       include: {
         student: {
           include: {

@@ -126,36 +126,38 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send notification to all student's tutors
-    try {
-      const tutors = await prisma.studentTutor.findMany({
-        where: { studentId },
-        include: {
-          tutor: {
-            select: { id: true, firebaseToken: true, firstName: true, lastName: true },
+    // Send notification to all student's tutors (unless skipNotification is true)
+    if (!body.skipNotification) {
+      try {
+        const tutors = await prisma.studentTutor.findMany({
+          where: { studentId },
+          include: {
+            tutor: {
+              select: { id: true, firebaseToken: true, firstName: true, lastName: true },
+            },
           },
-        },
-      });
+        });
 
-      const tutorTokens = tutors
-        .map(st => st.tutor.firebaseToken)
-        .filter((token): token is string => token !== null && token.trim() !== '');
+        const tutorTokens = tutors
+          .map(st => st.tutor.firebaseToken)
+          .filter((token): token is string => token !== null && token.trim() !== '');
 
-      if (tutorTokens.length > 0) {
-        const notificationTitle = 'Asistencia Registrada';
-        const notificationBody = `Se registró asistencia para ${attendance.student?.user?.firstName} ${attendance.student?.user?.lastName} el ${new Date(attendance.date).toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' })} a las ${new Date(attendance.date).toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' })}`;
+        if (tutorTokens.length > 0) {
+          const notificationTitle = 'Asistencia Registrada';
+          const notificationBody = `Se registró asistencia para ${attendance.student?.user?.firstName} ${attendance.student?.user?.lastName} el ${new Date(attendance.date).toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' })} a las ${new Date(attendance.date).toLocaleTimeString('es-BO', { timeZone: 'America/La_Paz' })}`;
 
-        const notificationData = {
-          attendanceId: String(attendance.id),
-          studentId: String(studentId),
-          date: attendance.date.toISOString(),
-        };
+          const notificationData = {
+            attendanceId: String(attendance.id),
+            studentId: String(studentId),
+            date: attendance.date.toISOString(),
+          };
 
-        await sendMulticast(tutorTokens, notificationTitle, notificationBody, notificationData);
+          await sendMulticast(tutorTokens, notificationTitle, notificationBody, notificationData);
+        }
+      } catch (notificationError) {
+        console.warn('Error sending attendance notification to tutors', notificationError);
+        // Don't fail the request if notification fails
       }
-    } catch (notificationError) {
-      console.warn('Error sending attendance notification to tutors', notificationError);
-      // Don't fail the request if notification fails
     }
 
     // Return flat data for frontend UX and raw attendance

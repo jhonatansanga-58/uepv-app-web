@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useRef } from "react";
+
 import {
   Sidebar,
   SidebarCollapse,
@@ -12,13 +14,50 @@ import {
 import { HiAcademicCap, HiUserGroup, HiLogout, HiClipboardList, HiBell, HiDocumentText } from "react-icons/hi";
 import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
 export function SideBarComponent() {
   const { data: session } = useSession();
   const userRole = session?.user?.role;
   const pathname = usePathname();
+
+  const router = useRouter();
+  const clickCountRef = useRef(0);
+  const lastClickTimeRef = useRef(0);
+  const clickTimerRef = useRef<any>(null);
+
+  const handleSecretClick = (e: React.MouseEvent) => {
+    if (userRole !== "ADMIN") {
+      router.push("/");
+      return;
+    }
+
+    const now = Date.now();
+    const diff = now - lastClickTimeRef.current;
+    lastClickTimeRef.current = now;
+
+    if (diff < 1000) {
+      clickCountRef.current += 1;
+      if (clickCountRef.current >= 5) {
+        if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+        clickCountRef.current = 0;
+        router.push("/admin/stress-test");
+        return;
+      }
+    } else {
+      clickCountRef.current = 1;
+    }
+
+    // Wait 350ms to see if another click occurs. If not, navigate to homepage.
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    clickTimerRef.current = setTimeout(() => {
+      if (clickCountRef.current < 5 && clickCountRef.current > 0) {
+        clickCountRef.current = 0;
+        router.push("/");
+      }
+    }, 350);
+  };
 
   // Helper classes for active/inactive collapse headings
   const getCollapseClass = (isActive: boolean) => {
@@ -49,10 +88,10 @@ export function SideBarComponent() {
       className="min-h-screen max-h-screen w-64 border-r border-gray-200 flex flex-col bg-white"
     >
       {/* Encabezado con escudo */}
-      <Link href="/" className="flex flex-col items-center py-6 gap-2 shrink-0 border-b border-gray-100 hover:opacity-85 transition-opacity cursor-pointer">
+      <div onClick={handleSecretClick} className="flex flex-col items-center py-6 gap-2 shrink-0 border-b border-gray-100 hover:opacity-85 transition-opacity cursor-pointer">
         <Image src="/escudo.png" alt="Escudo UEPV" width={90} height={90} className="drop-shadow-md" />
         <span className="text-xl font-bold text-neutral-dark tracking-wide">UEPV</span>
-      </Link>
+      </div>
 
       {/* Menú */}
       <div className="flex-1 overflow-y-auto px-2 py-4">
